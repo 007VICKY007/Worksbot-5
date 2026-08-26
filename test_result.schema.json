@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-debug-assistant/schemas/test_result.schema.json",
+  "title": "TestResult",
+  "description": "Outcome of automatically validating a FixSuggestion in a sandbox.",
+  "type": "object",
+  "required": ["test_run_id", "fix_id", "status", "reproduction_test", "regression_suite"],
+  "properties": {
+    "test_run_id": {
+      "type": "string",
+      "description": "Unique identifier for this validation run (UUID)."
+    },
+    "fix_id": {
+      "type": "string",
+      "description": "ID of the FixSuggestion being validated."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error", "skipped"],
+      "description": "Overall outcome of the validation run."
+    },
+    "reproduction_test": {
+      "type": "object",
+      "description": "Result of the test that reproduces the original failure.",
+      "required": ["test_name", "failed_before_fix", "passes_after_fix"],
+      "properties": {
+        "test_name": { "type": "string" },
+        "test_code": { "type": "string", "description": "Generated test source code, if newly created." },
+        "failed_before_fix": {
+          "type": "boolean",
+          "description": "Confirms the test reproduces the original bug on unpatched code."
+        },
+        "passes_after_fix": {
+          "type": "boolean",
+          "description": "Confirms the test passes once the fix is applied."
+        }
+      },
+      "additionalProperties": false
+    },
+    "regression_suite": {
+      "type": "object",
+      "description": "Result of running the pre-existing test suite against the patched code.",
+      "required": ["total", "passed", "failed"],
+      "properties": {
+        "total": { "type": "integer" },
+        "passed": { "type": "integer" },
+        "failed": { "type": "integer" },
+        "failed_test_names": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverage_delta": {
+      "type": "number",
+      "description": "Change in code coverage percentage caused by the fix + new test, if measured."
+    },
+    "execution_log": {
+      "type": "string",
+      "description": "Raw stdout/stderr captured from the sandbox test run."
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Total time taken to run validation, in milliseconds."
+    },
+    "sandbox_image": {
+      "type": "string",
+      "description": "Identifier of the container image used for isolated execution."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

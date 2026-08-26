@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-debug-assistant/schemas/stack_trace.schema.json",
+  "title": "StackTrace",
+  "description": "A parsed, language-agnostic representation of an exception/stack trace.",
+  "type": "object",
+  "required": ["id", "language", "exception_type", "message", "frames"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this stack trace (UUID)."
+    },
+    "language": {
+      "type": "string",
+      "enum": ["python", "javascript", "typescript", "java", "go", "csharp", "other"],
+      "description": "Detected source language of the trace."
+    },
+    "exception_type": {
+      "type": "string",
+      "description": "The exception/error class name (e.g., 'KeyError', 'TypeError', 'NullPointerException')."
+    },
+    "message": {
+      "type": "string",
+      "description": "The exception message text."
+    },
+    "raw_trace": {
+      "type": "string",
+      "description": "The original unparsed stack trace text."
+    },
+    "frames": {
+      "type": "array",
+      "description": "Ordered stack frames, typically innermost (failure point) first.",
+      "items": {
+        "type": "object",
+        "required": ["file", "function"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "File path as it appears in the trace."
+          },
+          "line": {
+            "type": "integer",
+            "description": "Line number of this frame."
+          },
+          "column": {
+            "type": "integer",
+            "description": "Column number, if available."
+          },
+          "function": {
+            "type": "string",
+            "description": "Function or method name."
+          },
+          "code_snippet": {
+            "type": "string",
+            "description": "The line of source code at this frame, if included in the trace."
+          },
+          "is_application_code": {
+            "type": "boolean",
+            "description": "True if this frame belongs to the user's codebase rather than a third-party library/framework."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "related_log_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of LogEntry records surrounding this stack trace, for additional context."
+    }
+  },
+  "additionalProperties": false
+}

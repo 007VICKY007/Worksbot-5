@@ -1,0 +1,13 @@
+2026-08-21 09:43:55,123 INFO  Starting order processing service...
+2026-08-21 09:43:55,124 INFO  Received order: {'apple': 3, 'banana': 2}
+2026-08-21 09:43:55,125 ERROR Unhandled exception while processing order. Full traceback below:
+
+Traceback (most recent call last):
+  File "order_processor.py", line 28, in calculate_order_total
+    price = get_item_price(item_name)
+  File "/Volumes/Personal/worksbot 5/ai-debug-assistant/sample_project/inventory.py", line 20, in get_item_price
+    return item["cost"]                  # BUG: key should be "price", not "cost"
+           ~~~~^^^^^^^^
+KeyError: 'cost'
+
+2026-08-21 09:43:55,126 ERROR Order processing failed. Service shutting down.
