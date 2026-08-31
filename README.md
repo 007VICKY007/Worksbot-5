@@ -1,299 +1,381 @@
-# AI Software Debugging Assistant
+# AI Debug Assistant
 
-An AI-powered system that ingests application logs, stack traces, and source
-code; identifies the likely root cause of a failure; retrieves the relevant
-code context; proposes a fix; and validates that fix with automated tests.
+Upload your Python code. Get bugs and fixes back.
 
 ---
 
-## 1. Problem Statement
+## What's This For?
 
-Developers spend a large share of their time reading logs, tracing errors
-back to source lines, and manually verifying fixes. This project automates
-that loop:
+You write Python code. Code breaks. You spend hours looking at error messages and trying to figure out what went wrong.
 
-```
-Logs / Stack Trace / Source Code
-        │
-        ▼
- 1. Ingestion & Parsing
-        │
-        ▼
- 2. Context Retrieval (RAG over codebase)
-        │
-        ▼
- 3. Root Cause Diagnosis (LLM reasoning)
-        │
-        ▼
- 4. Fix Suggestion (patch / diff)
-        │
-        ▼
- 5. Automated Test Generation & Validation
-        │
-        ▼
-   Verified Fix + Debugging Report
-```
+This tool reads your code, tells you what's broken, and shows you how to fix it.
 
 ---
 
-## 2. Goals
+## How To Use It
 
-- Accept raw logs, stack traces, and a source repository as input.
-- Parse and normalize errors into a structured format regardless of
-  language/log format.
-- Retrieve the exact files/functions relevant to the failure using
-  embedding-based semantic search over the codebase.
-- Diagnose the likely root cause with supporting evidence (file, line,
-  reasoning).
-- Propose a concrete code fix as a unified diff / patch.
-- Automatically generate and run tests to validate the fix before
-  presenting it to the developer.
-- Produce a human-readable debugging report summarizing the whole process.
-
-## 3. Non-Goals
-
-- Fully autonomous, unsupervised code deployment (a human reviews/approves
-  the final patch).
-- Support for every programming language on day one — the reference
-  implementation targets Python and JavaScript/TypeScript first, with a
-  pluggable parser layer for others.
+1. Go to the website
+2. Paste your Python code (or upload a file)
+3. Click "Analyze"
+4. Get back:
+   - Where the bug is (line number)
+   - What the bug is (actual problem)
+   - How to fix it (actual code)
+   - Why it's a problem (explanation)
 
 ---
 
-## 4. Architecture
-
-### 4.1 Components
-
-| Component | Responsibility |
-|---|---|
-| **Ingestion Service** | Accepts logs/stack traces/source code (file upload, API, or CLI). Normalizes into `LogEntry` / `StackTrace` schema. |
-| **Parser Layer** | Language-specific stack trace parsers (Python traceback, Java exception, Node.js stack, generic regex fallback). |
-| **Retrieval Engine (RAG)** | Chunks and embeds the source repository; performs vector + keyword hybrid search to fetch the code relevant to the failing frame. |
-| **Diagnosis Engine** | LLM-driven reasoning step that combines the parsed error, retrieved code, and (optionally) recent git history to produce a root-cause hypothesis with a confidence score. |
-| **Fix Engine** | Generates a candidate patch (unified diff) addressing the diagnosed root cause. Can propose multiple candidates ranked by confidence. |
-| **Test Runner / Validator** | Applies the patch in an isolated sandbox, generates/executes regression + reproduction tests, and reports pass/fail. |
-| **Report Generator** | Produces a structured Markdown/JSON debugging report: root cause, evidence, patch, test results. |
-| **Orchestrator / API** | Coordinates the pipeline end-to-end; exposes a REST API and optional CLI. |
-
-### 4.2 High-Level Flow
+## What Happens Inside
 
 ```
-POST /api/v1/debug
-   │
-   ▼
-IngestionService.parse(logs, stack_trace, repo_ref)
-   │
-   ▼
-RetrievalEngine.get_context(parsed_error)  ──► top-k relevant code chunks
-   │
-   ▼
-DiagnosisEngine.diagnose(parsed_error, context) ──► RootCauseHypothesis
-   │
-   ▼
-FixEngine.generate_fix(hypothesis, context) ──► FixSuggestion (diff)
-   │
-   ▼
-TestRunner.validate(fix, repo_ref) ──► TestResult
-   │
-   ▼
-ReportGenerator.build(hypothesis, fix, test_result) ──► DebugReport
-```
-
-### 4.3 Tech Stack (reference implementation)
-
-- **Language:** Python 3.11+
-- **LLM access:** Anthropic Claude API (`claude-sonnet-4-6` or configured
-  model) via the Messages API, used for diagnosis and fix generation.
-- **Embeddings / Vector store:** any of FAISS / Chroma / pgvector for code
-  retrieval (pluggable).
-- **API layer:** FastAPI
-- **Sandbox execution:** Docker container per validation run (isolation +
-  reproducibility).
-- **Test frameworks supported:** pytest (Python), Jest (JS/TS) — pluggable
-  adapter pattern for others.
-- **Storage:** SQLite/Postgres for run history; object storage for
-  artifacts (patches, reports).
-
----
-
-## 5. Project Structure
-
-```
-ai-debug-assistant/
-├── README.md
-├── schemas/                     # JSON Schemas for all data contracts
-│   ├── log_entry.schema.json
-│   ├── stack_trace.schema.json
-│   ├── code_context.schema.json
-│   ├── diagnosis.schema.json
-│   ├── fix_suggestion.schema.json
-│   ├── test_result.schema.json
-│   └── debug_report.schema.json
-├── src/
-│   ├── ingestion/                # Log & stack trace parsing/normalization
-│   ├── retrieval/                # Code chunking, embedding, RAG search
-│   ├── diagnosis/                # LLM-based root cause analysis
-│   ├── fix_engine/                # Patch/diff generation
-│   ├── testing/                  # Sandbox execution + test validation
-│   └── api/                      # FastAPI app / orchestrator / CLI
-├── tests/                        # Unit + integration tests for the tool itself
-├── data/
-│   └── sample_logs/              # Example logs/stack traces for demos
-└── docs/
-    ├── architecture.md
-    └── evaluation.md
+Your Code
+   ↓
+Read it
+   ↓
+Find problems
+   ↓
+Figure out what's wrong
+   ↓
+Suggest a fix
+   ↓
+You get the answer
 ```
 
 ---
 
-## 6. Data Contracts (Schemas)
+## Getting Started
 
-All inter-component data is validated against JSON Schemas in `/schemas`.
-Summary of each:
-
-| Schema | Purpose |
-|---|---|
-| `log_entry.schema.json` | A single normalized log line (timestamp, level, service, message, metadata). |
-| `stack_trace.schema.json` | Parsed exception/stack trace with ordered frames (file, line, function). |
-| `code_context.schema.json` | Retrieved code chunks with file path, line range, and relevance score. |
-| `diagnosis.schema.json` | Root cause hypothesis, confidence, supporting evidence references. |
-| `fix_suggestion.schema.json` | Proposed patch as a unified diff, plus rationale and risk level. |
-| `test_result.schema.json` | Outcome of automated validation (pass/fail, logs, coverage delta). |
-| `debug_report.schema.json` | Top-level report tying everything together for the developer. |
-
-See `/schemas/*.json` for full definitions.
-
----
-
-## 7. Pipeline Detail
-
-### 7.1 Ingestion
-- Accepts: raw log files (`.log`, `.txt`), JSON-structured logs, stack
-  trace text, and a reference to the source repo (local path or git URL).
-- Normalizes every log line into a `LogEntry`.
-- Detects the exception/stack trace segment and parses it into a
-  `StackTrace` object (ordered frames: file, line number, function name,
-  code snippet if available).
-
-### 7.2 Retrieval (RAG)
-- On first run against a repo, the codebase is chunked (function/class
-  granularity) and embedded into a vector store.
-- Given a `StackTrace`, the top failing frame(s) are used as anchor points;
-  the engine retrieves:
-  - the exact function/file at the failure line,
-  - semantically similar code (e.g., other callers, similar utility
-    functions),
-  - relevant tests already covering that code path.
-- Output: ranked list of `CodeContext` chunks.
-
-### 7.3 Diagnosis
-- The Diagnosis Engine sends the structured error + retrieved context to
-  the LLM with a constrained prompt requiring:
-  - a root cause statement,
-  - a confidence score (0–1),
-  - supporting evidence (specific file/line references — no invented
-    files),
-  - alternative hypotheses if confidence is low.
-- Output validated against `diagnosis.schema.json`.
-
-### 7.4 Fix Generation
-- Given the diagnosis, the Fix Engine asks the LLM to produce a minimal,
-  targeted unified diff.
-- Multiple candidate fixes may be generated and ranked by predicted risk
-  (e.g., "low risk: null check" vs. "high risk: refactor function
-  signature").
-
-### 7.5 Automated Testing / Validation
-- The candidate patch is applied to a throwaway branch/sandbox container.
-- Steps:
-  1. Run existing test suite (regression check).
-  2. Generate a reproduction test from the original stack trace if one
-     doesn't already exist, confirm it fails on the *unpatched* code and
-     passes on the *patched* code.
-  3. Record pass/fail, execution logs, and coverage delta.
-- Only fixes that pass validation are marked `verified` in the report;
-  others are returned as `unverified — needs human review`.
-
-### 7.6 Reporting
-- Combines diagnosis + fix + test result into a single `DebugReport`
-  (Markdown for humans, JSON for machine consumption / CI integration).
-
----
-
-## 8. API (reference)
-
-```
-POST /api/v1/debug
-  Body: { logs, stack_trace, repo_ref, language? }
-  Returns: DebugReport (may be async — returns a job_id for long-running runs)
-
-GET /api/v1/debug/{job_id}
-  Returns: current status + DebugReport when complete
-
-GET /api/v1/debug/{job_id}/patch
-  Returns: the raw unified diff of the (best) verified fix
-```
-
----
-
-## 9. Evaluation Plan
-
-To demonstrate the assistant works, the submission includes:
-
-1. A set of **sample bugs** (in `data/sample_logs/`) seeded into a small
-   demo repository, each with a known root cause and known fix.
-2. A script that runs the full pipeline against each sample and reports:
-   - **Root cause accuracy** — did the diagnosis point to the correct
-     file/line?
-   - **Fix success rate** — did the generated patch pass validation?
-   - **False positive rate** — cases where a fix was marked verified but
-     didn't actually resolve the original error.
-3. Latency and cost metrics per pipeline run (LLM calls, tokens used).
-
-See `docs/evaluation.md` for the full rubric.
-
----
-
-## 10. Setup
+### Install
 
 ```bash
 git clone <repo-url>
 cd ai-debug-assistant
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+```
 
-# Set your Anthropic API key
+### Add Your API Key
+
+```bash
 export ANTHROPIC_API_KEY=sk-...
+```
 
-# Run the API
+### Start
+
+```bash
 uvicorn src.api.main:app --reload
+```
 
-# Or run via CLI
-python -m src.api.cli --logs data/sample_logs/example1.log \
-                       --repo ./sample-repo
+Open `http://localhost:8000` in your browser.
+
+---
+
+## Examples
+
+### Broken Code #1
+
+```python
+texts.append(build_profile_text(cleaned))
+embeddings = encode_profiles(texts)
+logger.info(f"Embeddings generated with shape: {embeddings.shape}")
+```
+
+**What's Wrong:**
+- Line 13: Function `parse_list_field` might not exist
+- Line 31: Code assumes `'skills'` key is in the dict (it might not be)
+- Line 38: Assumes the embeddings object has a `shape` attribute
+
+**How To Fix:**
+```python
+if 'skills' in raw_dict:
+    skills = parse_list_field(raw_dict['skills'])
+if hasattr(embeddings, 'shape'):
+    logger.info(f"Shape: {embeddings.shape}")
 ```
 
 ---
 
-## 11. Roadmap / Stretch Goals
+### Broken Code #2
 
-- [ ] Multi-language stack trace parsers (Java, Go, Rust)
-- [ ] IDE plugin (VS Code) for inline "Explain & Fix" actions
-- [ ] CI integration: auto-comment a suggested fix on failing pipeline runs
-- [ ] Learning loop: track which suggested fixes were accepted/rejected by
-      developers to improve future ranking
-- [ ] Support for flaky-test detection vs. genuine regressions
+```python
+def test_get_device():
+    device = get_device()
+    assert device in ["cpu", "cuda", "mps"]
+```
+
+**What's Wrong:**
+- Line 18: Using `monkeypatch.setattr` wrong. Target should be the actual path, not text
+- Line 18: The mock function needs to return an object, not just the class
+
+**How To Fix:**
+```python
+def test_get_device(monkeypatch):
+    def mock_device():
+        return DummyModel()
+    
+    monkeypatch.setattr("module.get_device", mock_device)
+    device = get_device()
+    assert device in ["cpu", "cuda", "mps"]
+```
 
 ---
 
-## 12. Deliverables Checklist (Internship Submission)
+## What It Checks For
 
-- [x] README with architecture, schemas, and setup instructions
-- [x] JSON Schemas for all data contracts
-- [ ] Working implementation of ingestion + parsing
-- [ ] Working implementation of retrieval (RAG)
-- [ ] Working implementation of diagnosis + fix generation
-- [ ] Automated test validation module
-- [ ] Sample bug set + evaluation report
-- [ ] Demo (CLI or short recording) showing an end-to-end run
-# Worksbot-5
+- Missing error handling
+- Assuming things exist when they might not
+- Wrong function calls
+- Broken test setup
+- Missing checks before using data
+- Using things wrong
+
+---
+
+## Files & Folders
+
+```
+ai-debug-assistant/
+├── README.md
+├── requirements.txt
+├── src/
+│   ├── api/              Main app
+│   ├── parser/           Read code
+│   ├── analyzer/         Find problems
+│   └── fixer/            Create fixes
+├── tests/                Tests
+└── data/                 Example code
+```
+
+---
+
+## Setup Steps
+
+### 1. Python Version
+
+Need Python 3.11 or newer.
+
+Check:
+```bash
+python --version
+```
+
+### 2. Virtual Environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows:
+```bash
+.venv\Scripts\activate
+```
+
+### 3. Install Packages
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Add API Key
+
+Get key from Anthropic website, then:
+```bash
+export ANTHROPIC_API_KEY=sk-your-key-here
+```
+
+### 5. Run It
+
+```bash
+uvicorn src.api.main:app --reload
+```
+
+Go to `http://localhost:8000`
+
+---
+
+## Using The Website
+
+### Step 1: Upload Code
+
+Two ways:
+- Click "Browse .py File" - pick from your computer
+- Paste code directly in the text box
+
+### Step 2: Analyze
+
+Click "Analyze with GPT" button.
+
+Wait. It reads your code.
+
+### Step 3: Read Results
+
+You get three tabs:
+
+**Bugs Found** - What's broken
+- Line number
+- What's wrong
+- Why it matters
+
+**Fixed Code** - What to change
+- The corrected code
+- Ready to copy
+
+**Explanation** - Why it matters
+- Details on each bug
+- How the fix works
+
+---
+
+## API (If You Want To Use It Programmatically)
+
+### Send Code For Analysis
+
+```
+POST http://localhost:8000/api/v1/debug
+
+{
+  "code": "your python code here",
+  "file_name": "script.py"
+}
+```
+
+### Get Back
+
+```
+{
+  "bugs_found": [
+    {
+      "line": 13,
+      "issue": "Function might not exist",
+      "fix": "Add import or check"
+    }
+  ],
+  "fixed_code": "...",
+  "explanation": "..."
+}
+```
+
+---
+
+## What Languages Work
+
+Right now:
+- Python ✓
+
+Later:
+- JavaScript/TypeScript
+- Java
+- Go
+
+---
+
+## Stuff It Can Find
+
+- Missing error checks
+- Wrong imports
+- Broken function calls
+- Bad test setup
+- Assuming data exists
+- Wrong object attributes
+- Missing null checks
+- Type problems
+
+---
+
+## What It CAN'T Do
+
+- Fix everything automatically (you still review)
+- Work with 100% broken code
+- Understand your weird custom framework
+- Handle files bigger than 1MB
+- Deploy code for you
+
+---
+
+## Tests
+
+```bash
+pytest tests/
+```
+
+With coverage:
+```bash
+pytest tests/ --cov=src/
+```
+
+---
+
+## What's Next
+
+Soon:
+- More languages
+- Editor plugins (VS Code)
+- GitHub Actions support
+- API improvements
+- Faster analysis
+
+---
+
+## How It Works (Technical)
+
+1. **Parse** - Break down your code into pieces
+2. **Scan** - Look for common problems
+3. **Check** - Run it against known issue patterns
+4. **Suggest** - Generate fixes
+5. **Report** - Show you everything
+
+---
+
+## Questions?
+
+**Doesn't work?**
+- Check Python version (need 3.11+)
+- Check API key is set
+- Check internet connection
+- Look at error message in terminal
+
+**Want to help?**
+- Report bugs on GitHub
+- Submit code improvements
+- Add language support
+- Write better tests
+
+**Found a security issue?**
+- Don't post it publicly
+- Email: support@example.com
+
+---
+
+## output
+
+<img width="1470" height="956" alt="Screenshot 2026-08-29 at 10 56 00 AM" src="https://github.com/user-attachments/assets/b43e6c04-be2b-4876-b3a1-f146138d0635" />
+
+<img width="1470" height="956" alt="Screenshot 2026-08-29 at 11 00 31 AM" src="https://github.com/user-attachments/assets/e34fe89e-b0f3-4a29-879f-49590ef0b591" />
+
+<img width="1469" height="954" alt="Screenshot 2026-08-29 at 11 00 37 AM" src="https://github.com/user-attachments/assets/4f1b4994-2cec-46d5-aa70-e8b9533452b3" />
+
+
+
+---
+
+## Real Talk
+
+This tool isn't magic. It finds common bugs and suggests fixes. Some fixes might not be perfect. Always check code before running it in production.
+
+Use it to:
+- Catch obvious mistakes
+- Learn what went wrong
+- Get a head start on fixes
+- Speed up code review
+
+Don't use it to:
+- Blindly deploy code
+- Replace code review
+- Handle security-critical stuff alone
+- Fix everything automatically
+
+---
+
+That's it. Upload code, get fixes. 🔧
