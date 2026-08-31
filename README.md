@@ -21,6 +21,11 @@ That's it.
 
 ---
 
+# Output
+
+<img width="1470" height="956" alt="Screenshot 2026-08-29 at 11 00 31 AM" src="https://github.com/user-attachments/assets/fad10a15-857f-4323-b5f5-ee994e0012d2" />
+
+
 ## See It In Action
 
 ### Before (Your Broken Code)
