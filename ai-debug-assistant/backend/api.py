@@ -1,4 +1,4 @@
-# backend/api.py  — Flask REST API for AI Debug Assistant
+
 
 import os
 import sys
