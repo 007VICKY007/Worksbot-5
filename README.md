@@ -30,7 +30,6 @@ Built end-to-end by **Vignesh Pandiya G** — AI Engineer & Full-Stack Architect
 16. [Limitations](#limitations)
 17. [Roadmap](#roadmap)
 18. [Contributing](#contributing)
-19. [License](#license)
 20. [Author](#author)
 
 ---
