@@ -540,12 +540,6 @@ The AST pass is effectively instant. AI analysis is typically 5–30 seconds per
 
 ---
 
-## License
-
-MIT — use it however you want.
-
----
-
 ## Author
 
 **Vignesh Pandiya G** — AI Engineer & Full-Stack Architect
