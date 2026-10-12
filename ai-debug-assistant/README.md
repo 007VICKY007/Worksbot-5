@@ -1,255 +1,386 @@
-# Mindora Intelligence Report &middot; AI Software Debugging Assistant
+# Mindora Intelligence Report &middot; Universal AI Software Debugging Assistant
 
-> **An enterprise-grade, end-to-end automated Python diagnostic, static analysis, and AI root-cause remediation platform.**  
+> **An enterprise-grade, polyglot automated code debugging, static analysis, and AI Intellectual root-cause remediation platform.**  
 > **Architected and Developed End-to-End by:** **Vignesh Pandiya G** (AI Engineer & Full-Stack Architect)
 
 ---
 
-## Executive Summary
+## 🌟 Executive Summary
 
-Modern software development teams lose between **40% and 60% of their active engineering hours** locating, diagnosing, and repairing code regressions, syntax failures, and runtime hazards. Standard static linters only provide cryptic warnings without context, while naive generative AI prompts lack abstract syntax tree (AST) grounding and frequently hallucinate incorrect fixes.
+Modern software development teams lose between **40% and 60% of their active engineering hours** locating, diagnosing, and repairing code regressions, syntax failures, and runtime hazards across polyglot microservices. Standard linters only output cryptic warnings without context, while naive generative AI prompts lack abstract syntax tree (AST) grounding and frequently hallucinate broken code.
 
-The **Mindora AI Software Debugging Assistant** automates the entire debugging lifecycle:
-1. **Instant Offline Ingestion:** Traverses full Python project hierarchies recursively in milliseconds using native AST parsing.
-2. **Multi-Vector Bug Detection:** Captures syntax failures, mutable default traps, bare exceptions, None comparisons, unused imports, and symbol shadowing without third-party dependencies.
-3. **AI Root-Cause Reasoning (GPT-4o):** Pinpoints the underlying architectural flaw, scores confidence, and writes complete, verified replacement code with step-by-step rationale.
-4. **Executive Certified Audit Reports:** Generates an official, print-ready **Mindora Intelligence Report** letterhead complete with unique audit reference codes, security profile attribution, summary statistics, and executive sign-off.
-5. **Zero-Trust Security & User Management:** Powered by Argon2id password hashing, stateless 8-hour JWT authentication, and local credential storage.
-
----
-
-## System Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             FRONTEND (Next.js 16 + React 19)                     │
-│  ┌─────────────────────────┐  ┌────────────────────────┐  ┌───────────────────┐  │
-│  │   Mindora Glassmorphic  │  │ Interactive OS Folder  │  │ Dynamic Auth &    │  │
-│  │    Dashboard & Tabs     │  │       Browser Modal    │  │  Registration UI  │  │
-│  └────────────┬────────────┘  └───────────┬────────────┘  └─────────┬─────────┘  │
-└───────────────┼───────────────────────────┼─────────────────────────┼────────────┘
-                │ HTTP / REST               │ GET /api/browse         │ JWT Bearer
-                ▼                           ▼                         ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             BACKEND (FastAPI + Python 3.11+)                     │
-│  ┌─────────────────────────┐  ┌────────────────────────┐  ┌───────────────────┐  │
-│  │   Argon2id + JWT Auth   │  │   Filesystem Browser   │  │ Pydantic v2 Data  │  │
-│  │   (users.json store)    │  │   Security Sandbox     │  │    Contracts      │  │
-│  └─────────────────────────┘  └────────────────────────┘  └───────────────────┘  │
-│                                           │                                      │
-│                ┌──────────────────────────┴──────────────────────────┐           │
-│                ▼                                                     ▼           │
-│  ┌─────────────────────────┐                            ┌─────────────────────┐  │
-│  │ AST Static Engine       │                            │ AI Reasoning Engine │  │
-│  │ • py_compile Syntax     │                            │ • OpenAI GPT-4o     │  │
-│  │ • ast.NodeVisitor       │                            │ • Single & Batch    │  │
-│  │ • 9 Static Detectors    │                            │ • Fixed Code + Diff │  │
-│  └─────────────────────────┘                            └─────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────────┘
-```
+The **Mindora AI Software Debugging Assistant** automates the entire debugging lifecycle end-to-end:
+1. **Universal Multi-Language Ingestion:** Automatically detects and analyzes code across **16+ languages** (Python, JavaScript, TypeScript, Java, C, C++, C#, Go, Rust, PHP, Kotlin, Swift, Dart, Ruby, SQL, Shell/Bash).
+2. **Deterministic Multi-Vector Static Detection:** Evaluates 9 defect categories (Syntax Errors, Security Vulnerabilities, Logic Defects, Runtime Hazards, Code Quality, Performance Bottlenecks, Resource Leaks, Concurrency Bugs, and Type Safety).
+3. **AI Intellectual Deep Code Comprehension (GPT-4o):** Understands the entire architecture and logic flow of every code file (whether buggy or pristine), identifies root causes, and generates complete, correct replacement files.
+4. **Deterministic Sandbox Validation Loop:** Automatically compiles and validates generated fixes in an isolated sandbox for up to 3 repair cycles, guaranteeing `VERIFIED` status before code is accepted.
+5. **1-Click Verified Fix Deployment:** Applies verified fixes directly to disk with an automatic `.bak` safety backup and live re-scan.
+6. **MongoDB Enterprise Persistence:** Automatically stores user profiles, credential hashes, and complete scan audit trails in MongoDB (`mongodb://localhost:27017/`, DB: `mindora_debug_assistant`) with local disk backup failover.
+7. **Dedicated Administrator Supervision Portal (`/admin`):** Isolated administrative console tracking all tested files, execution timestamps (Date & Time), user account details, and full audit logs.
+8. **Executive Certified Audit Reports:** Generates an official, print-ready **Mindora Intelligence Report** letterhead complete with unique audit reference codes, verified file breakdowns, official certification stamps, and executive sign-off.
 
 ---
 
-## Technology Stack (End-to-End)
+## 🏗️ System Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND (Next.js 16 + React 19)                          │
+│  ┌─────────────────────────┐  ┌────────────────────────┐  ┌─────────────────────────┐  │
+│  │   Mindora Glassmorphic  │  │ Interactive OS Folder  │  │ Direct /admin Portal    │  │
+│  │    Workspace & Tabs     │  │       Browser Modal    │  │ (Audit Trail & Users)   │  │
+│  └────────────┬────────────┘  └───────────┬────────────┘  └───────────┬─────────────┘  │
+└───────────────┼───────────────────────────┼───────────────────────────┼────────────────┘
+                │ HTTP / REST               │ GET /api/browse           │ JWT Bearer (Admin)
+                ▼                           ▼                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND (FastAPI + Python 3.11+ / 3.14)                   │
+│  ┌─────────────────────────┐  ┌────────────────────────┐  ┌─────────────────────────┐  │
+│  │   Argon2id + JWT Auth   │  │   Filesystem Sandbox   │  │ Pydantic v2 Contracts   │  │
+│  │   & MongoDB Sync Engine │  │   & Traversal Security │  │ (Validation & Schemas)  │  │
+│  └────────────┬────────────┘  └───────────┬────────────┘  └───────────┬─────────────┘  │
+│               │                           │                           │                │
+│               ▼                           ▼                           ▼                │
+│  ┌─────────────────────────┐  ┌────────────────────────┐  ┌─────────────────────────┐  │
+│  │ Universal Static Engine │  │ Sandbox Fix Validator  │  │ AI Intellectual Engine  │  │
+│  │ • 16+ Languages Auto-ID │  │ • 3-Cycle Auto Repair  │  │ • OpenAI GPT-4o Polyglot│  │
+│  │ • AST & Syntax Checkers │  │ • Compiler Verification│  │ • Parallel Thread Pool  │  │
+│  │ • 9 Defect Categories   │  │ • Unified Diff Engine  │  │ • Root Cause & Fix Gen  │  │
+│  └────────────┬────────────┘  └───────────┬────────────┘  └───────────┬─────────────┘  │
+└───────────────┼───────────────────────────┼───────────────────────────┼────────────────┘
+                │                           │                           │
+                ▼                           ▼                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              PERSISTENCE & AUDIT STORAGE                               │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ MongoDB 8+ (mongodb://localhost:27017/ -> mindora_debug_assistant)              │  │
+│  │   • users collection: credentials, roles, timestamps                             │  │
+│  │   • audit_scans collection: tested files, timestamps, issues, AI analyses        │  │
+│  │   • error_memory_vectors: 1536-dim vector store, past tested errors, proven fixes│  │
+│  │ Dual-Write Disk Failover: backend/users.json & backend/audit_logs.json           │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 💻 Technology Stack
 
 ### 1. Frontend Architecture
-| Technology | Role & Business Rationale |
+| Technology | Role & Capabilities |
 |---|---|
-| **Next.js 16 (Turbopack)** | Enterprise React framework with App Router, static page optimization, and instant sub-second build times. |
-| **React 19 & TypeScript 5** | Strict compile-time type safety preventing frontend regressions, type-safe API communication. |
-| **Framer Motion 13** | Physics-based micro-interactions, animated metric counters, spring transitions, and interactive accordion drawers. |
-| **CSS Modules (Mindora Glassmorphism)** | Bespoke Apple-inspired translucent glass aesthetics, `backdrop-filter: blur(16px)`, translucent pill badges, and zero UI clipping. |
-| **Custom Code Highlighter** | Lightweight, zero-dependency Python syntax highlighter featuring tokenization for keywords, built-ins, strings, comments, and decorators. |
-| **Print Engine (`@media print`)** | Optimized executive letterhead layout for instant PDF export, watermarking, and corporate audit distribution. |
+| **Next.js 16 (Turbopack)** | Enterprise React framework with App Router, static page optimization, and instant compilation. |
+| **React 19 & TypeScript 5** | Strict compile-time type safety preventing regressions, fully typed domain models. |
+| **Framer Motion 13** | Smooth spring physics micro-interactions, animated metric counters, and collapsible cards. |
+| **Acrylic Glassmorphism** | Apple-inspired translucent glass UI (`backdrop-filter: blur(16px)`), modern pill badges, SVG icons (zero emojis). |
+| **Multi-Language Syntax Highlighter** | Zero-dependency syntax tokenizer highlighting Python, JavaScript, TypeScript, C, Go, Rust, Java, and SQL. |
+| **Print & PDF Engine** | Dedicated `@media print` corporate audit letterhead layout for instant PDF export. |
 
 ### 2. Backend Architecture
-| Technology | Role & Business Rationale |
+| Technology | Role & Capabilities |
 |---|---|
-| **Python 3.11+ / 3.14** | Core execution environment ensuring compatibility with modern AST specifications. |
-| **FastAPI** | High-performance, asynchronous ASGI REST API engine with auto-generated OpenAPI documentation. |
-| **Uvicorn** | Production-ready ASGI server handling concurrent I/O operations and hot-reloading during development. |
-| **Pydantic v2** | Strict data validation and serialization for incoming requests and outgoing diagnostic reports. |
-| **Python `ast` & `py_compile`** | Standard-library static analyzer requiring zero external heavy tooling, achieving near-instant scans. |
-| **OpenAI GPT-4o Integration** | Deep reasoning model prompting that returns structured JSON root causes, explanations, and corrected scripts. |
+| **Python 3.11+ / 3.14** | Modern Python execution runtime ensuring maximum AST and standard library performance. |
+| **FastAPI** | High-speed asynchronous ASGI REST API engine with auto-generated OpenAPI documentation. |
+| **Uvicorn** | Production-ready ASGI server handling high-throughput asynchronous requests and hot-reloading. |
+| **Pydantic v2** | Data contract validation and schema enforcement for incoming requests and diagnostic reports. |
+| **Python `ast` & Compilers** | Standard-library static AST parser and multi-language syntax verification engines. |
+| **OpenAI GPT-4o Integration** | Deep reasoning model prompting that returns structured root causes, code fixes, and explanations. |
+| **ThreadPoolExecutor** | Concurrent multi-threaded batch AI analyzer processing multiple codebase files in parallel. |
 
-### 3. Security & User Management
-| Technology | Role & Business Rationale |
+### 3. Database & Security Architecture
+| Technology | Role & Capabilities |
 |---|---|
-| **Argon2id (`argon2-cffi`)** | Winner of the Password Hashing Competition; cryptographically protects user credentials against GPU/ASIC attacks. |
-| **JSON Web Tokens (PyJWT)** | Cryptographically signed bearer tokens (HS256) with an 8-hour expiry for stateless, secure API requests. |
-| **Local Credential Storage** | File-backed user repository (`backend/users.json`) allowing local multi-user testing without database overhead. |
-| **Filesystem Traversal Sandbox** | Safe directory explorer preventing path traversal exploits and ignoring sensitive dotfiles (`.git`, `.venv`, `node_modules`). |
+| **MongoDB 8+ (`pymongo`)** | Primary document database storing user credentials and persistent test audit logs. |
+| **Argon2id (`argon2-cffi`)** | Winner of the Password Hashing Competition; military-grade cryptographic password protection. |
+| **JSON Web Tokens (PyJWT)** | Cryptographically signed bearer tokens (HS256) with 8-hour expiry for stateless security. |
+| **Role-Based Access Control** | Strictly separates public developers/QA testers from the `/admin` supervisory console. |
+| **Disk Backup Failover** | Dual-write synchronization to `users.json` and `audit_logs.json` ensures zero downtime if DB is paused. |
 
 ---
 
-## Detailed Feature Implementation
+## 🚀 Key Features
 
-### 1. Dynamic User Registration & Role Management
-- **Self-Service Onboarding:** Users can dynamically register new accounts via the frontend modal or use pre-configured profiles (`admin` or `user`).
-- **Role Attribution:** Supports roles (`admin`, `developer`, `qa_lead`) displayed across diagnostic records and audit letterheads.
-- **Server Persistence:** Accounts and their Argon2id hashes persist in `backend/users.json`.
+### 1. Universal Multi-Language Support
+Detects and diagnoses code across 16+ languages automatically:
+- **Python** (`.py`)
+- **JavaScript & TypeScript** (`.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`)
+- **Java** (`.java`)
+- **C & C++** (`.c`, `.h`, `.cpp`, `.hpp`, `.cc`)
+- **C#** (`.cs`)
+- **Go** (`.go`)
+- **Rust** (`.rs`)
+- **PHP** (`.php`)
+- **Kotlin** (`.kt`, `.kts`)
+- **Swift** (`.swift`)
+- **Dart** (`.dart`)
+- **Ruby** (`.rb`)
+- **SQL** (`.sql`)
+- **Shell / Bash** (`.sh`, `.bash`)
 
-### 2. Visual Directory Browser
-- Eliminates manual path typing errors with an interactive OS directory explorer modal.
-- Filters out hidden system folders (`.git`, `node_modules`, `.venv`, `__pycache__`) and allows drill-down into nested project folders.
+### 2. AI Intellectual Deep Code Comprehension
+- **Understands All Code:** Analyzes the architectural intent, logic flow, and runtime behavior of every code file.
+- **Evaluates Buggy and Clean Code:** Pinpoints exact root causes for defect files; evaluates and certifies clean files.
+- **Concurrent Batch Analysis:** Parallelized via a thread pool to audit entire repositories in seconds.
+- **Structured Findings:** Plain-language root cause explanation, confidence rating (`HIGH`, `MEDIUM`, `LOW`), complete replacement code, and unified diff preview.
 
-### 3. Multi-Vector AST Static Analysis
-The engine parses the Abstract Syntax Tree (AST) directly without running untrusted code:
-- **`SyntaxError`:** Caught via `py_compile` before runtime execution.
-- **`BareExcept`:** Identifies dangerous `except:` statements that swallow critical interrupts.
-- **`MutableDefault`:** Detects persistent state bugs like `def append_to(item, target=[])`.
-- **`NoneComparison`:** Flags non-idiomatic `== None` and replaces with identity comparison `is None`.
-- **`BuiltinShadow`:** Prevents accidental variable shadowing of core builtins (`list`, `dict`, `id`, `type`, `len`).
-- **`UnusedImport`:** Flags imported libraries never referenced in the module AST.
-- **`LineTooLong`:** Enforces configurable line length limits (e.g., PEP 8 120-character rules).
-- **`TodoComment`:** Surfaces forgotten `# TODO`, `# FIXME`, `# HACK`, or `# BUG` annotations.
-- **`MissingReturn`:** Warns when return-annotated functions exit without returning values.
+### 3. Deterministic Sandbox Validation Loop
+- **Multi-Cycle Auto-Repair:** Automatically attempts up to 3 repair cycles if a generated fix fails syntax or compiler checks.
+- **Compiler Grounding:** Validates candidate code in an isolated sandbox before returning results to the user.
+- **Strict Verification Badges:** Surfaces `VERIFIED` (green) or `FAILED` (red) status and loop iterations (`Loop: 1/3`).
 
-### 4. Precision AI Root-Cause Reasoning (GPT-4o)
-- **File-Level Analysis (`POST /api/analyze`):** Sends specific file code + detected AST issues to GPT-4o.
-- **Batch Auto-Diagnosis (`POST /api/analyze-all`):** Diagnoses every flagged file across the entire project in parallel with a single click.
-- **Structured Output:** Delivers:
-  1. Plain-language Root Cause explanation.
-  2. Complete, executable, corrected replacement Python code.
-  3. Step-by-step numbered breakdown of every modification.
-  4. Certainty score rating (`HIGH` | `MEDIUM` | `LOW`).
+### 4. 1-Click Fix Deployment with `.bak` Safety
+- **1-Click Apply:** Directly overwrites the file on disk with the verified clean code.
+- **Automatic Backup:** Automatically creates a timestamped safety backup (`<filename>.<ext>.bak`) before any disk modification.
+- **Real-Time Live Re-scan:** Re-scans the repository immediately to reflect updated issue counts.
 
-### 5. Mindora Intelligence Report (Official Letterhead)
-- **Executive Letterhead:** Formally branded with **MINDORA INTELLIGENCE REPORT &middot; AI Debugging Software**.
-- **Unique Audit Tracking:** Dynamic Reference ID generation (`MND-DIAG-YYYY-XXXX`).
-- **Audited Account Attribution:** Shows target directory, scanned user, assigned role, and timestamp.
-- **Deep Root Cause & Code Comparison:** Embeds the AI analysis alongside line-by-line syntax-highlighted code.
-- **Verification Guarantee & Seal:** Features an official system certification badge and attribution to **Vignesh Pandiya G** (Lead Architect & End-to-End Creator).
-- **1-Click PDF Export:** Includes dedicated `@media print` CSS rules hiding navigation, buttons, and chrome to output a crisp, corporate PDF audit document.
+### 5. Type of Errors Directory & Intellectual AI Workspace
+Organizes defects into 9 comprehensive software quality dimensions:
+1. **Syntax Errors:** Violations of language grammar, parse errors, uncompilable structures.
+2. **Security Vulnerabilities:** Remote code execution, dangerous eval, SQL injection, unsafe memory.
+3. **Logic Defects:** Mutable defaults, missing where clauses, dead branches, reference comparison errors.
+4. **Runtime Hazards:** Broad exception swallowing, panics, unhandled promise rejections, crash vectors.
+5. **Code Quality:** Built-in shadowing, unused imports, explicit any types, anti-patterns.
+6. **Performance Issues:** Unoptimized database queries, heavy allocations, algorithmic bottlenecks.
+7. **Resource Leaks:** Unclosed HTTP bodies, dangling file descriptors, unclosed database handles.
+8. **Concurrency Bugs:** Goroutine loop capture, race conditions, unsafe thread synchronization.
+9. **Type Safety:** Loss of type safety, non-null assertions, missing type declarations.
+
+### 6. Dedicated Administrator Supervision Console (`/admin`)
+- **Isolated URL Route:** Navigating directly to `http://localhost:3000/admin` opens the Administrator Login form.
+- **Zero Frontend Leaks:** Public workspace (`/`) and landing page (`/login`) contain no admin buttons or navigation links.
+- **Role Protection:** Public registration restricts role selection to Developer and QA Engineer only; backend rejects admin registration attempts with `403 Forbidden`.
+- **Supervisory Dashboard:**
+  - Complete historical log of all tested scans.
+  - Formatted **Date & Time** stamps for every execution.
+  - **User details** (username and role).
+  - Tested files manifest, issue counts, duration, and language breakdown.
+  - Deep Inspection Modal reviewing all issues and AI determinations per scan.
+  - Global platform KPI metrics (total scans, files tested, bugs detected, unique users).
+
+### 7. Mindora Certified Letterhead Report
+- Formally branded **Mindora Intelligence Report** letterhead for executive stakeholder presentation.
+- Dynamic Audit Reference ID (`MND-DIAG-YYYY-XXXX`).
+- Embedded verified file breakdown, code defects table, AI root cause determinations, and recommended fixes.
+- Official Verification Seal and certified lead architect sign-off by **Vignesh Pandiya G**.
+- One-click print-to-PDF via optimized `@media print` styling.
+
+### 8. Simplified QA Workflow (`Project → Create Tests → Run Tests → Fix Issues`)
+- **Test Case Management:** Create, edit, and organize test cases (Unit, Integration, E2E, Manual) with AI-powered generation from source code.
+- **Test Execution:** Run test cases against the codebase with real-time output, error capture, and stack traces.
+- **Auto-Issue Creation:** Failed tests automatically create issues with error logs, reproduction steps, severity, and target file mapping.
+- **Issue Lifecycle Tracking:** Status flow `Open → In Progress → Fixed → Retest → Verified → Closed` with `Reopened` support.
+- **Developer Assignment:** QA assigns issues to developers with automatic status transition and notification.
+- **Fix Submission:** Developers submit fixes with sandbox validation, automatic `.bak` backup, and diff generation.
+- **Retest & Verification:** QA retests fixed issues using original or new test runs; auto-transitions to `Verified` on pass, `Reopened` on fail.
+- **Complete Audit Trail:** Every status change, assignment, fix, and retest recorded with timestamps and actor.
+- **Dashboard & Metrics:** Real-time summary with counts by status, severity, and visual status flow diagram.
+- **AI Test Generation:** Generate test cases automatically from any source file using GPT-4o.
 
 ---
 
-## API Reference & Data Contracts
+## 📡 API Reference
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `POST` | `/api/auth/login` | Authenticates username & password, returns JWT token | No |
-| `POST` | `/api/auth/register` | Registers new user account with Argon2id hash | No |
-| `GET` | `/api/auth/me` | Validates session and returns current active user | Yes (Bearer) |
-| `GET` | `/api/auth/users` | Lists all registered accounts and roles | Yes (Bearer) |
-| `GET` | `/api/auth/public-users` | Showcase endpoint for user directory auditing | No |
-| `GET` | `/api/browse?path=/` | Navigates local filesystem directories securely | Yes (Bearer) |
-| `POST` | `/api/scan` | Executes full AST static analysis across a directory | Yes (Bearer) |
-| `POST` | `/api/analyze` | Queries GPT-4o for root cause and fixed code on a file | Yes (Bearer) |
-| `POST` | `/api/analyze-all` | Batch-analyzes all detected issues across all files | Yes (Bearer) |
+| `POST` | `/api/auth/login` | Authenticates user/admin credentials and returns signed JWT | No |
+| `POST` | `/api/auth/register` | Registers developer/QA user in MongoDB (rejects admin role) | No |
+| `GET` | `/api/auth/users` | Lists registered user profiles | Yes (Bearer) |
+| `GET` | `/api/auth/public-users` | Public user list for audit directory attribution | No |
+| `GET` | `/api/browse?path=/` | Safely traverses local filesystem folders | Yes (Bearer) |
+| `POST` | `/api/scan` | Scans directory across all languages and records audit log | Yes (Bearer) |
+| `POST` | `/api/scan-ai-deep` | Performs complete scan + parallel AI Intellectual analysis on all files | Yes (Bearer) |
+| `POST` | `/api/analyze` | AI root-cause analysis and validated fix for a single file | Yes (Bearer) |
+| `POST` | `/api/analyze-all` | Batch AI Intellectual analysis across multiple files | Yes (Bearer) |
+| `POST` | `/api/fix/apply` | Writes verified code to disk with `.bak` safety backup | Yes (Bearer) |
+| `POST` | `/api/fix/verify` | Re-validates code fix in sandbox environment | Yes (Bearer) |
+| `GET` | `/api/rag/stats` | Retrieves vector store statistics (dimensions, languages, users) | Yes (Bearer) |
+| `GET` | `/api/rag/memories` | Retrieves filtered and paginated error memories from MongoDB | Yes (Bearer) |
+| `POST` | `/api/rag/search` | Performs semantic vector similarity search on past tested errors | Yes (Bearer) |
+| `DELETE` | `/api/rag/memories/{id}` | Deletes a specific error memory from MongoDB | Yes (Admin) |
+| `POST` | `/api/rag/clear` | Clears all stored vector memories from MongoDB | Yes (Admin) |
+| `GET` | `/api/admin/scans` | Retrieves paginated and filtered scan audit logs | Yes (Admin) |
+| `GET` | `/api/admin/scans/{id}` | Retrieves full file-by-file audit detail of a scan | Yes (Admin) |
+| `GET` | `/api/admin/stats` | Retrieves aggregated platform testing KPI statistics | Yes (Admin) |
+| `GET` | `/api/admin/users` | Lists users enriched with scan activity metrics | Yes (Admin) |
+| `POST` | `/api/admin/scans/clear` | Clears stored scan audit logs in MongoDB and disk | Yes (Admin) |
+| `GET` | `/api/qa/simple/test-cases` | Lists test cases for a project | Yes (Bearer) |
+| `POST` | `/api/qa/simple/test-cases` | Creates a new test case | Yes (Bearer) |
+| `POST` | `/api/qa/simple/test-cases/generate-ai` | Generates AI test cases from source file | Yes (Bearer) |
+| `POST` | `/api/qa/simple/test-runs` | Executes a test case (auto-creates issue on failure) | Yes (Bearer) |
+| `GET` | `/api/qa/simple/test-runs` | Lists test runs for a project | Yes (Bearer) |
+| `GET` | `/api/qa/simple/issues` | Lists issues with optional status filter | Yes (Bearer) |
+| `GET` | `/api/qa/simple/issues/{id}` | Retrieves full issue detail with history | Yes (Bearer) |
+| `PATCH` | `/api/qa/simple/issues/{id}/status` | Updates issue status (validates transitions) | Yes (Bearer) |
+| `POST` | `/api/qa/simple/issues/{id}/assign` | Assigns issue to a developer | Yes (Bearer) |
+| `GET` | `/api/qa/simple/summary` | Retrieves workflow metrics dashboard | Yes (Bearer) |
+| `POST` | `/api/qa/simple/issues/{id}/retest` | Retests a fixed issue with a test run | Yes (Bearer) |
 | `GET` | `/api/health` | Health check endpoint returning `{"status": "ok"}` | No |
 
 ---
 
-## Project Directory Structure
+## 🧠 Mindora RAG Pipeline & MongoDB Vector Store
+
+The **Retrieval-Augmented Generation (RAG) Pipeline** gives Mindora an **institutional memory**, allowing it to learn and remember every defect, problematic code context, and verified fix across all tested files by every engineer:
+
+1. **High-Density Vector Embeddings (1536 Dimensions):**
+   - Uses OpenAI `text-embedding-3-small` (1536-dimensional unit hypersphere vectors) with a deterministic fallback vectorizer.
+   - Vectorizes dense semantic representations containing Language, Error Rule, Error Message, Code Snippets, Root Causes, and Verified Solutions.
+2. **MongoDB Dedicated Vector Store Collection (`error_memory_vectors`):**
+   - Automatically stores every analyzed error occurrence into the `error_memory_vectors` collection in MongoDB (`mongodb://localhost:27017/`, DB: `mindora_debug_assistant`).
+   - Tracks the tester's username (`@vignesh`, `@user`, `@admin`), execution timestamp, file path, language, category, code snippet, and verified fix.
+   - Maintains unique indices and occurrence counters for recurring defect patterns.
+3. **Semantic Vector Similarity Retrieval:**
+   - Evaluates cosine similarity via NumPy vector dot products across stored memory vectors.
+   - Retrieves top matching past occurrences when analyzing new files or diagnosing subtle regressions.
+4. **Context Injection & Prompt Augmentation:**
+   - Injects matching previous fixes directly into GPT-4o's prompt as high-confidence precedents, drastically boosting repair accuracy and eliminating duplicate regressions.
+5. **Interactive UI Explorer & Admin Supervision:**
+   - **RAG Vector Memory Tab:** Users can interactively search the vector store using natural language or code snippets and view similarity matching percentages (e.g. `94.2% Match`).
+   - **Admin Management Console (`/admin`):** Oversees all error vectors indexed in MongoDB, provides filtering by user/rule, and enables single-click deletion or clearing of vector memories.
+
+---
+
+## 📁 Repository Structure
 
 ```
 ai-debug-assistant/
 ├── backend/
-│   ├── server.py              # Main FastAPI application & REST routing
-│   ├── auth.py                # Argon2id password hashing, JWT token lifecycle
-│   ├── ai_analyzer.py         # OpenAI GPT-4o integration (single & batch analysis)
-│   ├── users.json             # Persistent user credential & role database
-│   ├── requirements.txt       # Backend dependencies (FastAPI, PyJWT, Argon2, etc.)
+│   ├── server.py              # FastAPI application, REST endpoints, and auth dependencies
+│   ├── ai_analyzer.py         # AI Intellectual reasoning engine, GPT-4o, thread pool batching
+│   ├── rag_pipeline.py        # Vector embedding generation (1536-dim), cosine similarity, RAG memory engine
+│   ├── mongo.py               # MongoDB connection, collections, and dual-write sync
+│   ├── auth.py                # Argon2id password hashing, JWT creation/validation
+│   ├── audit_logger.py        # Audit trail recorder (timestamps, users, files tested)
+│   ├── fix_validator.py       # Deterministic multi-cycle sandbox validation loop
+│   ├── users.json             # Resilient disk backup for registered users
+│   ├── audit_logs.json        # Resilient disk backup for scan audit trails
+│   ├── requirements.txt       # Backend dependencies (FastAPI, pymongo, PyJWT, Argon2, etc.)
 │   └── src/
-│       ├── scanner.py         # AST NodeVisitor static analysis engine
-│       ├── report.py          # Diagnostic report compiler & metrics aggregator
-│       ├── log_parser.py      # Stack trace and runtime log ingestion
-│       ├── code_retriever.py  # Local code context extraction
-│       └── test_runner.py     # Automated test execution & patch validation
+│       ├── scanner.py         # Multi-language static scanner and directory walker
+│       ├── report.py          # Diagnostic report compiler and metrics aggregator
+│       ├── languages.py       # Language detector (16+ languages)
+│       └── universal_analyzer.py # Polyglot syntax and regex rule matching
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── page.tsx       # Main Mindora Dashboard (Scan, Issues, Report tabs)
-│   │   │   ├── page.module.css# Glassmorphic styles, print stylesheet, typography
-│   │   │   ├── layout.tsx     # Root HTML layout with Geist font configurations
-│   │   │   ├── globals.css    # CSS variables, animations, dark/light baseline
-│   │   │   └── login/
-│   │   │       ├── page.tsx   # Landing page, Q&A Docs accordion, developer bio, auth modal
-│   │   │       └── login.module.css # Hero aesthetics, responsive cards, glass buttons
+│   │   │   ├── page.tsx       # Main Mindora Workspace (Scan, Issues, Types, Letterhead, QA Workflow)
+│   │   │   ├── page.module.css# 3D Acrylic glassmorphism, responsive cards, print rules
+│   │   │   ├── admin/
+│   │   │   │   ├── page.tsx   # Dedicated Admin Login & Audit Console
+│   │   │   │   └── admin.module.css # Glassmorphic Admin console styling
+│   │   │   ├── login/
+│   │   │   │   ├── page.tsx   # Public Landing page, Developer bio, User Sign-in/Register
+│   │   │   │   └── login.module.css # Public hero aesthetics and auth modal
+│   │   │   ├── layout.tsx     # Root HTML layout with typography configurations
+│   │   │   └── globals.css    # Global CSS variables, animations, and baseline
 │   │   ├── components/
-│   │   │   └── AnimatedText.tsx # Framer Motion spring physics text animator
+│   │   │   ├── AnimatedText.tsx     # Framer Motion spring physics text animator
+│   │   │   ├── TypewriterHero.tsx   # Interactive terminal typing effect
+│   │   │   ├── DirBrowser.tsx       # Local filesystem visual explorer modal
+│   │   │   └── CodeHighlighter.tsx  # Multi-language code highlighter
 │   │   └── lib/
-│   │       ├── api.ts         # Type-safe API client communicating with backend
-│   │       ├── auth.ts        # Browser session & JWT token manager
-│   │       └── types.ts       # Shared TypeScript domain models & schemas
+│   │       ├── api.ts         # Type-safe API client for backend communication
+│   │       ├── auth.ts        # Local session, token verification, and role helpers
+│   │       └── types.ts       # Shared TypeScript domain models and schemas
 │   ├── package.json           # Next.js 16, React 19, Framer Motion dependencies
 │   └── tsconfig.json          # Strict TypeScript configuration
-├── sample_project/            # Seeded demonstration project with real-world bugs
-│   ├── inventory.py           # Buggy module (mutable defaults, bare except, unused imports)
-│   ├── order_processor.py     # Syntax anomalies & None comparisons
-│   └── test_inventory.py      # Unit tests demonstrating bug impacts
-└── README.md                  # Comprehensive Manager & Technical Guide
+├── sample_project/            # Seeded demo projects with real-world bugs
+│   ├── multi_lang/            # Polyglot test files (Python, JS, TS, Java, C, Go, Rust, SQL, Bash)
+│   ├── inventory.py           # Python test module (mutable defaults, bare except)
+│   ├── order_processor.py     # Python test module (syntax issues, None comparisons)
+│   └── test_inventory.py      # Unit test verification suite
+└── README.md                  # Comprehensive Documentation & Architecture Guide
 ```
 
 ---
 
-## Quick Start & Evaluation Guide
+## ⚡ Quick Start & Run Commands
 
 ### 1. Prerequisites
-- **Python 3.11+** installed on your system.
-- **Node.js 18+** and `npm` installed.
-- An **OpenAI API Key** (for AI root-cause reasoning; static analysis works 100% offline without a key).
+- **Python 3.11+ / 3.14**
+- **Node.js 18+** and `npm`
+- **MongoDB** (`mongodb-community` via Homebrew or Docker)
+- **OpenAI API Key** (for AI Intellectual deep reasoning; static analysis works 100% offline)
 
-### 2. Start the Backend Service
+---
+
+### 2. Start MongoDB
+If using Homebrew on macOS:
+```bash
+brew services start mongodb-community
+```
+Verify MongoDB is running:
+```bash
+mongosh --eval "db.runCommand({ ping: 1 })"
+```
+*(MongoDB Compass connection URI: `mongodb://localhost:27017/`)*
+
+---
+
+### 3. Start the Backend Service
 ```bash
 cd ai-debug-assistant
 
-# 1. Install backend dependencies
-pip install -r backend/requirements.txt openai python-dotenv
+# 1. Install dependencies
+pip install -r backend/requirements.txt pymongo openai python-dotenv
 
-# 2. Configure OpenAI key (optional, for AI diagnosis features)
-# In backend/.env or root .env:
+# 2. Configure environment variables (in backend/.env):
 # OPENAI_API_KEY=sk-...
+# MONGO_URI=mongodb://localhost:27017/
 
-# 3. Launch FastAPI server on port 8001
+# 3. Start the backend FastAPI server on port 8001:
 python3 -m uvicorn backend.server:app --port 8001 --reload
 ```
+Backend will be live at **`http://localhost:8001`**.
 
-### 3. Start the Frontend Application
+---
+
+### 4. Start the Frontend Application
+In a new terminal window:
 ```bash
 cd ai-debug-assistant/frontend
 
-# 1. Install Node dependencies
+# 1. Install dependencies
 npm install
 
-# 2. Launch Next.js dev server on port 3000
-npm run dev -- --port 3000
+# 2. Start Next.js development server on port 5173:
+npm run dev
 ```
-
-### 4. Open and Experience the Application
-1. Navigate to **`http://localhost:3000`** in your browser.
-2. Sign in with the default credentials:
-   - **Username:** `admin`
-   - **Password:** `admin123`  
-   *(Or click **Register Account** to create your own user profile dynamically).*
-3. In the directory field, click **Browse** and select the included `sample_project/` folder:
-   ```
-   /path/to/ai-debug-assistant/sample_project
-   ```
-4. Click **Run scan** to see instant AST static analysis results across all files.
-5. Click **Auto-Diagnose All Files with AI** or **Analyze with AI** on any file to observe GPT-4o root-cause diagnosis and code synthesis.
-6. Switch to the **Report** tab to inspect the certified letterhead and click **Print / Save PDF** for an executive audit report.
+Frontend will be live at **`http://localhost:5173`**.
 
 ---
 
-## Manager & Stakeholder FAQ
+### 5. Enable “Continue with Google” (optional)
 
-### Q1: Why use combined AST Static Analysis + AI rather than pure AI?
-**A:** Naive AI scans of entire repositories are expensive, slow, and non-deterministic. By running native AST analysis locally first, we achieve zero-latency issue detection with 100% precision. GPT-4o is then deployed specifically on isolated, problematic AST segments—slashing token consumption by over 90% while guaranteeing that syntax errors are grounded in verified language rules.
-
-### Q2: Is proprietary enterprise source code exposed to external servers?
-**A:** No. The entire static analysis, folder traversal, authentication, and reporting framework runs strictly on the local machine or internal cloud server. Only when a developer explicitly clicks *"Analyze with AI"* is the specific file and its detected issues transmitted via TLS to OpenAI's secure API.
-
-### Q3: How does this integrate into an enterprise CI/CD pipeline?
-**A:** The backend provides standard REST endpoints (`POST /api/scan`) returning strongly typed JSON schemas. Automated pipelines (GitHub Actions, GitLab CI) can invoke the scanner as a quality gate, failing PRs that introduce high-severity AST hazards or automatically generating Mindora audit reports as build artifacts.
+1. In [Google Cloud Console](https://console.cloud.google.com/), configure the OAuth consent screen as **External** and publish it if every Google user should be able to sign in. This app only requests basic identity claims (`openid`, `email`, and `profile`), so it does not require sensitive-scope verification.
+2. Open the OAuth 2.0 **Web application** client and add these values to **Authorized JavaScript origins**:
+   - `http://localhost:5173`
+   - `http://127.0.0.1:5173`
+   This implementation uses Google Identity Services ID tokens, not an authorization-code redirect; leave **Authorized redirect URIs** empty unless another integration needs one.
+3. Copy `backend/.env.example` to `backend/.env`, then set `GOOGLE_CLIENT_ID` to that client ID.
+4. Copy `frontend/.env.example` to `frontend/.env.local`, then set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to the **same** client ID.
+5. Restart both servers. The sign-in dialog will show **Continue with Google**. In the **Register** tab, choose Developer, QA Engineer, or Software Tester before continuing with Google; that approved role is stored for a first-time account. Existing accounts always keep their saved role. Administrator sign-in remains password-only.
 
 ---
 
-## Author & Developer
+## 🔐 Portals & Default Credentials
+
+| Portal | URL | Default Username | Default Password | Access Level |
+|---|---|---|---|---|
+| **Developer Code Scanner** | [http://localhost:5173](http://localhost:5173) | `user` | `user123` | Developer |
+| **QA Workspace** | [http://localhost:5173](http://localhost:5173) (QA Workflow tab) | `qa_user` | `qa123` | QA Engineer |
+| **Testing Execution Workspace** | [http://localhost:5173/testing](http://localhost:5173/testing) | `tester_user` | `tester123` | Software Tester |
+| **Admin Supervision Console** | [http://localhost:5173/admin](http://localhost:5173/admin) | `admin` | `admin123` | Administrator |
+| **Backend REST API** | [http://localhost:8001](http://localhost:8001) | — | — | FastAPI / OpenAPI |
+| **API Documentation** | [http://localhost:8001/docs](http://localhost:8001/docs) | — | — | Interactive Swagger UI |
+| **MongoDB Database** | `mongodb://localhost:27017/` | — | — | `mindora_debug_assistant` |
+
+---
+
+## 👨‍💻 Author & Lead Architect
 
 **Vignesh Pandiya G**  
-*AI Engineer & Full-Stack Architect*  
-- **Architecture:** Complete End-to-End System Design (FastAPI, Next.js 16, AST Engine, OpenAI Reasoning)  
-- **Specialization:** Autonomous Multi-Agent AI Systems, AST Code Analysis, High-Performance Full-Stack Applications  
-- **Location:** Chennai, Tamil Nadu &middot; B.Tech in Artificial Intelligence & Data Science
+*Lead Architect & End-to-End Creator &middot; Mindora Intelligence*  
+- **System Architecture:** Complete Full-Stack Design (FastAPI, Next.js 16, Universal AST Engine, MongoDB Persistence, GPT-4o Sandbox Validation)  
+- **Specialization:** Autonomous Multi-Agent AI Systems, AST Code Analysis, High-Performance Systems Engineering  
+- **Education:** B.Tech in Artificial Intelligence & Data Science

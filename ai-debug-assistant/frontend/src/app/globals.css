@@ -14,6 +14,13 @@
   --mist-white:   #f8faf9; /* Pure pearl white base */
   --rose-accent:  #34d399; /* Mint emerald accent */
 
+  /* Standard aliases across all pages */
+  --primary:       #167a5b;
+  --primary-hover: #12644b;
+  --primary-light: #10b981;
+  --bg:            #f8faf9;
+  --font:          'DM Sans', 'Inter', system-ui, sans-serif;
+
   /* Surface & Hyper-Realistic 3D Acrylic Glass Tokens (media_1789102251757.png) */
   --glass-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.32) 100%);
   --glass-bg-card: linear-gradient(145deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.32) 100%);

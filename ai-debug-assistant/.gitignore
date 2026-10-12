@@ -45,3 +45,10 @@ Thumbs.db
 logs/
 npm-debug.log*
 yarn-debug.log*
+# Local secrets and machine files
+.env
+.env.*
+!.env.example
+.DS_Store
+__pycache__/
+*.py[cod]

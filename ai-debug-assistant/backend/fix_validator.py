@@ -1,5 +1,5 @@
 # backend/fix_validator.py
-# Deterministic Sandbox Validation Engine for AI-Generated Code Fixes.
+# Deterministic validation in a temporary directory, NOT a security sandbox.
 #
 # Enforces the core rule: NEVER TRUST AI CODE WITHOUT VALIDATION.
 # 1. Copies target code into an isolated temporary sandbox.
@@ -23,6 +23,16 @@ if str(ROOT / "src") not in sys.path:
 
 from languages import detect_language, get_language_config
 from universal_analyzer import analyze_source_file
+
+
+def compiler_check(command):
+    """Trusted local tooling only; no inherited API keys, tokens or DB credentials."""
+    try:
+        return subprocess.run(command, capture_output=True, text=True, timeout=20,
+                              cwd=str(Path(command[-1]).parent) if Path(command[-1]).is_file() else None,
+                              env={"PATH": os.defpath, "LANG": "C.UTF-8"})
+    except (subprocess.TimeoutExpired, OSError):
+        return subprocess.CompletedProcess(command, 1, "", "Compiler unavailable or timed out.")
 
 
 def compute_unified_diff(original_code: str, fixed_code: str, filename: str = "file") -> str:
@@ -63,15 +73,15 @@ def validate_code_fix(
     diff = compute_unified_diff(original_code, fixed_code, Path(file_path).name)
 
     # 1. Reject empty or identical code
-    if not fixed_code.strip():
+    if not fixed_code.strip() or fixed_code == original_code:
         return {
             "status": "FAILED",
             "is_valid": False,
             "diff": diff,
             "remaining_issues": [],
             "new_issues": [],
-            "compiler_errors": "AI produced empty replacement code.",
-            "reason": "Generated fix is empty.",
+            "compiler_errors": "Replacement is empty or unchanged.",
+            "reason": "A fix must change the source.",
         }
 
     lang = detect_language(file_path, fixed_code) or "Unknown"
@@ -82,6 +92,13 @@ def validate_code_fix(
         temp_file.write_text(fixed_code, encoding="utf-8")
 
         compiler_errors: List[str] = []
+        tools = {"JavaScript": "node", "Java": "javac", "Go": "go", "Rust": "rustc", "Shell": "bash", "Ruby": "ruby"}
+        if lang not in {"Python", "C", "C++", *tools}:
+            compiler_errors.append(f"No configured syntax validator for {lang}; fix was not applied.")
+        elif lang in tools and not shutil.which(tools[lang]):
+            compiler_errors.append(f"Required validator {tools[lang]} is unavailable.")
+        elif lang in {"C", "C++"} and not (shutil.which("clang++" if lang == "C++" else "clang") or shutil.which("gcc")):
+            compiler_errors.append("Required C/C++ compiler is unavailable.")
 
         # 2. Compiler & Syntax-check passes
         if lang == "Python":
@@ -93,43 +110,43 @@ def validate_code_fix(
         elif lang in ("JavaScript", "TypeScript"):
             node = shutil.which("node")
             if node and lang == "JavaScript":
-                res = subprocess.run([node, "--check", str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([node, "--check", str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang == "Java":
             javac = shutil.which("javac")
             if javac:
-                res = subprocess.run([javac, "-Xlint:all", "-d", str(sandbox_path), str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([javac, "-Xlint:all", "-d", str(sandbox_path), str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang in ("C", "C++"):
             compiler = shutil.which("clang++" if lang == "C++" else "clang") or shutil.which("gcc")
             if compiler:
-                res = subprocess.run([compiler, "-fsyntax-only", "-Wall", str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([compiler, "-fsyntax-only", "-Wall", str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang == "Go":
             go_cmd = shutil.which("go")
             if go_cmd:
-                res = subprocess.run([go_cmd, "vet", str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([go_cmd, "vet", str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang == "Rust":
             rustc = shutil.which("rustc")
             if rustc:
-                res = subprocess.run([rustc, "--emit=metadata", "--out-dir", str(sandbox_path), str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([rustc, "--emit=metadata", "--out-dir", str(sandbox_path), str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang == "Shell":
             bash = shutil.which("bash")
             if bash:
-                res = subprocess.run([bash, "-n", str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([bash, "-n", str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
         elif lang == "Ruby":
             ruby = shutil.which("ruby")
             if ruby:
-                res = subprocess.run([ruby, "-c", str(temp_file)], capture_output=True, text=True)
+                res = compiler_check([ruby, "-c", str(temp_file)])
                 if res.returncode != 0:
                     compiler_errors.append(res.stderr.strip() or res.stdout.strip())
 
@@ -191,5 +208,5 @@ def validate_code_fix(
         "remaining_issues": post_issues,
         "new_issues": [],
         "compiler_errors": "",
-        "reason": "All compiler, syntax, and deterministic static checks passed successfully.",
+        "reason": "Configured syntax and static checks passed. Functional QA and tester evidence are still required.",
     }

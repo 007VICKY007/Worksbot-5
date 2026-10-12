@@ -27,19 +27,26 @@ DEFAULT_EXCLUDED_DIRS: Set[str] = {
 
 
 def scan_directory(root: str, include_all_dirs: bool = False) -> List[Dict[str, Any]]:
+    return scan_directory_detailed(root, include_all_dirs)[0]
+
+
+def scan_directory_detailed(root: str, include_all_dirs: bool = False) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Recursively scan all supported source code files under `root` across all
     supported programming languages.
 
     Returns:
-        List of Universal Bug dicts, sorted by (file, line).
+        Tuple:
+          - all_issues: List of Universal Bug dicts, sorted by (file, line).
+          - files_tested: List of dicts representing EVERY file tested (clean or failing).
     """
     root_path = Path(root).resolve()
     all_issues: List[Dict[str, Any]] = []
+    files_tested: List[Dict[str, Any]] = []
     supported_exts = get_supported_extensions()
 
     if not root_path.exists() or not root_path.is_dir():
-        return []
+        return [], []
 
     for dirpath, dirnames, filenames in os.walk(root_path):
         # Filter out heavy build and virtualenv directories
@@ -59,8 +66,10 @@ def scan_directory(root: str, include_all_dirs: bool = False) -> List[Dict[str, 
 
             try:
                 source_code = full_path.read_text(encoding="utf-8", errors="replace")
+                line_count = len(source_code.splitlines())
+                lang = detect_language(str(full_path), source_code) or "Unknown"
             except Exception as exc:
-                all_issues.append(create_bug(
+                read_err = create_bug(
                     language="Unknown",
                     file_path=rel_path,
                     line=1,
@@ -73,15 +82,36 @@ def scan_directory(root: str, include_all_dirs: bool = False) -> List[Dict[str, 
                     root_cause="File read permission error or encoding corruption.",
                     suggested_fix="Check file permissions.",
                     confidence=1.0,
-                ))
+                )
+                all_issues.append(read_err)
+                files_tested.append({
+                    "file": rel_path,
+                    "filename": fname,
+                    "language": "Unknown",
+                    "lines": 0,
+                    "issues_count": 1,
+                    "status": "DEFECTS_DETECTED",
+                    "issues": [read_err],
+                })
                 continue
 
             file_issues = analyze_source_file(full_path, rel_path, source_code)
             all_issues.extend(file_issues)
 
+            files_tested.append({
+                "file": rel_path,
+                "filename": fname,
+                "language": lang,
+                "lines": line_count,
+                "issues_count": len(file_issues),
+                "status": "DEFECTS_DETECTED" if file_issues else "PASSED",
+                "issues": file_issues,
+            })
+
     # Sort issues by file path, then line number (None placed at end)
     all_issues.sort(key=lambda x: (x.get("file", ""), x.get("line") or 9999999))
-    return all_issues
+    files_tested.sort(key=lambda x: (x.get("status") != "DEFECTS_DETECTED", x.get("file", "")))
+    return all_issues, files_tested
 
 
 def get_project_files_summary(root: str) -> Dict[str, Any]:

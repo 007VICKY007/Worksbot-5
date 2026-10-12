@@ -1,12 +1,27 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { login, registerUser, fetchRegisteredUsers, UserRecord } from "@/lib/api";
-import { saveSession, isLoggedIn } from "@/lib/auth";
+import { login, loginWithGoogle, registerUser, fetchRegisteredUsers, UserRecord } from "@/lib/api";
+import { saveSession, isLoggedIn, isAdmin, getRoleRoute } from "@/lib/auth";
 import AnimatedText from "@/components/AnimatedText";
 import TypewriterHero from "@/components/TypewriterHero";
 import styles from "./login.module.css";
+
+type GoogleCredentialResponse = { credential: string };
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: { client_id: string; callback: (response: GoogleCredentialResponse) => void; auto_select?: boolean }) => void;
+          renderButton: (element: HTMLElement, options: { theme: string; size: string; width: number; text: string; shape: string }) => void;
+        };
+      };
+    };
+  }
+}
 
 export default function LandingAndLoginPage() {
   const router = useRouter();
@@ -20,6 +35,10 @@ export default function LandingAndLoginPage() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState("");
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleAuthModeRef = useRef(authMode);
+  const googleRegistrationRoleRef = useRef(role);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   // Interactive accordion state for FAQ cards (all closed by default)
   const [openFaq, setOpenFaq]   = useState<Record<number, boolean>>({});
@@ -31,10 +50,83 @@ export default function LandingAndLoginPage() {
     setOpenFaq(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  // If already authenticated, redirect straight into dashboard
+  // If already authenticated, redirect straight into respective dashboard
   useEffect(() => {
-    if (isLoggedIn()) window.location.href = "/";
+    if (isLoggedIn()) {
+      router.replace(getRoleRoute());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Google Identity Services retains the callback passed during initialization.
+  // Keep the registration choices in refs so clicking Google after switching
+  // tabs or roles always submits the current values, not a stale render.
+  useEffect(() => {
+    googleAuthModeRef.current = authMode;
+    googleRegistrationRoleRef.current = role;
+  }, [authMode, role]);
+
+  async function handleGoogleCredential(response: GoogleCredentialResponse) {
+    if (!response.credential) {
+      setError("Google did not return a sign-in credential.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      // The selected role is relevant only when this is a first-time Google
+      // registration. Returning users always receive their stored server role.
+      const result = await loginWithGoogle(
+        response.credential,
+        googleAuthModeRef.current === "register"
+          ? googleRegistrationRoleRef.current
+          : undefined,
+      );
+      saveSession(result.token, result.username, result.role);
+      window.location.href = getRoleRoute(result.role);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!showAuthModal || !googleClientId || !googleButtonRef.current) return;
+
+    const renderGoogleButton = () => {
+      const container = googleButtonRef.current;
+      if (!container || !window.google) return;
+      container.replaceChildren();
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredential,
+        auto_select: false,
+      });
+      window.google.accounts.id.renderButton(container, {
+        theme: "outline",
+        size: "large",
+        width: 360,
+        text: "continue_with",
+        shape: "pill",
+      });
+    };
+
+    const scriptId = "google-identity-services";
+    const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existingScript) {
+      if (window.google) renderGoogleButton();
+      else existingScript.addEventListener("load", renderGoogleButton, { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = renderGoogleButton;
+    document.head.appendChild(script);
+  }, [showAuthModal, googleClientId]);
 
   async function handleAuthSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,14 +141,16 @@ export default function LandingAndLoginPage() {
     try {
       if (authMode === "login") {
         const result = await login(username.trim(), password);
-        saveSession(result.token, result.username);
-        window.location.href = "/";
+        const resolvedRole = result.role || (result.username === "admin" ? "admin" : "developer");
+        saveSession(result.token, result.username, resolvedRole);
+        window.location.href = getRoleRoute(resolvedRole);
       } else {
         const reg = await registerUser(username.trim(), password, role);
-        saveSession(reg.token, reg.user.username);
+        const regRole = reg.role || reg.user?.role || role;
+        saveSession(reg.token, reg.user.username, regRole);
         setSuccess(`User '${reg.user.username}' registered successfully! Redirecting…`);
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = getRoleRoute(regRole);
         }, 800);
       }
     } catch (err: unknown) {
@@ -114,16 +208,12 @@ export default function LandingAndLoginPage() {
           </nav>
 
           <div className={styles.navRight}>
-            <button className={styles.langBtn} title="Global Edition">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </button>
             <button
               className={styles.signInPillBtn}
-              onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
+              onClick={() => {
+                setAuthMode("login");
+                setShowAuthModal(true);
+              }}
             >
               Sign In
             </button>
@@ -667,6 +757,25 @@ export default function LandingAndLoginPage() {
               </div>
 
               <form className={styles.form} onSubmit={handleAuthSubmit}>
+                {googleClientId ? (
+                  <div className={styles.googleButton} ref={googleButtonRef} aria-label="Continue with Google" />
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.googleUnavailableButton}
+                    disabled
+                    title="Add NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable Google sign-in"
+                  >
+                    <GoogleMark />
+                    Continue with Google
+                  </button>
+                )}
+                {authMode === "register" && (
+                  <p className={styles.googleRoleHint}>
+                    Continue with Google after choosing your role below.
+                  </p>
+                )}
+                <div className={styles.authDivider}><span>or continue with email</span></div>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="username">Username</label>
                   <input
@@ -707,8 +816,8 @@ export default function LandingAndLoginPage() {
                       disabled={loading}
                     >
                       <option value="developer">Developer</option>
-                      <option value="qa_tester">QA Engineer</option>
-                      <option value="admin">Administrator</option>
+                      <option value="qa">QA Engineer</option>
+                      <option value="tester">Software Tester</option>
                     </select>
                   </div>
                 )}
@@ -763,5 +872,16 @@ export default function LandingAndLoginPage() {
         <span>Secure Local Execution &middot; AI Diagnostics</span>
       </footer>
     </div>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg className={styles.googleMark} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285F4" d="M21.35 12.2c0-.71-.06-1.23-.19-1.77H12v3.35h5.38c-.11.83-.73 2.08-2.1 2.92l-.02.11 3.05 2.36.21.02c1.94-1.79 3.06-4.42 3.06-7.19Z" />
+      <path fill="#34A853" d="M12 21.7c2.64 0 4.86-.87 6.48-2.36l-3.08-2.39c-.82.57-1.92.97-3.4.97-2.59 0-4.79-1.71-5.58-4.08l-.1.01-3.18 2.45-.03.1A9.79 9.79 0 0 0 12 21.7Z" />
+      <path fill="#FBBC05" d="M6.42 13.84A5.9 5.9 0 0 1 6.1 12c0-.64.11-1.26.31-1.84v-.12L3.2 7.55l-.1.05A9.8 9.8 0 0 0 2.05 12c0 1.58.38 3.08 1.05 4.4l3.32-2.56Z" />
+      <path fill="#EA4335" d="M12 6.08c1.86 0 3.12.81 3.84 1.48l2.8-2.73C16.85 3.16 14.64 2.3 12 2.3A9.79 9.79 0 0 0 3.1 7.6l3.31 2.56C7.21 7.79 9.41 6.08 12 6.08Z" />
+    </svg>
   );
 }

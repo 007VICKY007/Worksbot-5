@@ -2,31 +2,119 @@
   "admin": {
     "username": "admin",
     "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$q8Bne4yWijyv1IGwjBPZZA$aol/42gTRS676XeRxaYoERXV+k9k8en+9BItuW+6LSA",
-    "role": "admin",
-    "registered_at": "2026-09-08T00:00:00Z"
+    "registered_at": "2026-09-08T00:00:00Z",
+    "role": "admin"
   },
   "user": {
     "username": "user",
     "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$Tc5h8TEeoAhO4AOBhrZ2uw$UPqbpLdHwdMomz6ff5Xjil9Rm/3xZkrF4LDADW4Z/hg",
-    "role": "developer",
-    "registered_at": "2026-09-08T00:00:00Z"
+    "registered_at": "2026-09-08T00:00:00Z",
+    "role": "developer"
   },
   "dynamic_tester": {
     "username": "dynamic_tester",
     "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$3+wXSqt5ea+taMR410XWRA$JlVFe20OqVzUXlodhbnipQdwLdE3gV5FvVl594BuRKI",
-    "role": "developer",
-    "registered_at": "2026-09-11T03:20:27.684753+00:00"
+    "registered_at": "2026-09-11T03:20:27.684753+00:00",
+    "role": "developer"
   },
   "vicky": {
     "username": "vicky",
     "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$k7kiMgJd8dg54Iv/kraHTw$epERlIiICzZFtfN2KYuJBE7XNw4ScUJenDUjBfTWUXc",
-    "role": "qa_tester",
-    "registered_at": "2026-09-11T03:30:13.892946+00:00"
+    "registered_at": "2026-09-11T03:30:13.892946+00:00",
+    "role": "qa_tester"
   },
   "vignesh": {
     "username": "vignesh",
     "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$5psZEstq3ZGFoYvnR5Xwew$3VKc026jKmGSvNkf6ftvlbMNj55Bbj6Uk7vjFD/VeJk",
-    "role": "qa_tester",
-    "registered_at": "2026-09-11T05:48:34.863818+00:00"
+    "registered_at": "2026-09-11T05:48:34.863818+00:00",
+    "role": "qa_tester"
+  },
+  "mongo_tester": {
+    "username": "mongo_tester",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$yXvOFmjurECt/X9BrU395A$oDdz6VJYbza3Pk9bQwWal2UhTCoxA0q3jPy4uxSZXZA",
+    "registered_at": "2026-09-28T03:05:24.607922+00:00",
+    "role": "developer"
+  },
+  "Rahul": {
+    "username": "Rahul",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$aBOUPZmws5giMpJPSVbyzQ$qmuzjBiyPL/UcPFjMxvzzknBm14Z123N+jtEv5ZAV/8",
+    "registered_at": "2026-09-28T03:12:09.059907+00:00",
+    "role": "developer",
+    "updated_at": "2026-09-28T03:12:09.108046+00:00"
+  },
+  "rahul": {
+    "username": "rahul",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$+420i0FcGIlVN+DUJTbnJw$+IjSVNgduEB7V2E4Y12G66xvIuxr/gIm4QgubTm/CmY",
+    "registered_at": "2026-10-01T04:35:58.068828+00:00",
+    "role": "developer",
+    "updated_at": "2026-10-01T04:35:58.118968+00:00"
+  },
+  "qa_user": {
+    "username": "qa_user",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$+qAA4aBU1qxsqe6Vgp1uXQ$PNORD1mCvCNkjaO7hCsDKGwxUqnF3dHavO1iOOUDxTA",
+    "registered_at": "2026-10-01T05:04:29.096079+00:00",
+    "role": "qa",
+    "updated_at": "2026-10-01T05:04:29.119828+00:00"
+  },
+  "tester_user": {
+    "username": "tester_user",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$QbrjlfcHpk+43pIHGRONeA$NxAjbktwRGKyqyHvK2yfGinJP6Zi33oHeSt5ZKSS/R4",
+    "registered_at": "2026-10-01T05:04:29.096079+00:00",
+    "role": "tester",
+    "updated_at": "2026-10-01T05:04:29.142483+00:00"
+  },
+  "Ram": {
+    "username": "Ram",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$MU+MhhEameb7dLaPnfy15Q$9QDYu2tbwIKz00HlqDLWfhMx+M546dsv+Z+LdCtHS9Q",
+    "registered_at": "2026-10-01T05:11:33.713953+00:00",
+    "role": "qa",
+    "updated_at": "2026-10-01T05:11:33.764968+00:00"
+  },
+  "Raj": {
+    "username": "Raj",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$rPG8ZS1t/5LF/ucglZWz6Q$yUcU+UI87mNeIo4LEgpcwVn/xihYEzdLKKRiBNRbwPc",
+    "registered_at": "2026-10-01T05:35:08.824778+00:00",
+    "role": "tester",
+    "updated_at": "2026-10-01T05:35:08.876139+00:00"
+  },
+  "vino": {
+    "username": "vino",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$VicBXP/QEzlxbUWojZ4qdg$iM22YlV1Z1/jmWZGIzZNuOrVf6KDOtvkiSHJuKmQEk8",
+    "registered_at": "2026-10-07T04:35:09.599697+00:00",
+    "role": "tester",
+    "updated_at": "2026-10-07T04:35:09.656374+00:00"
+  },
+  "raj": {
+    "username": "raj",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$BqU7oipcxGrrnz8c/nPhRw$bcostiBpP3fFBvlHJc2O4ODeb1Z7McEwXVwZnAdl7dk",
+    "registered_at": "2026-10-07T04:37:56.883223+00:00",
+    "role": "tester",
+    "updated_at": "2026-10-07T04:37:56.941200+00:00"
+  },
+  "vigneshpandiya21@gmail.com": {
+    "username": "vigneshpandiya21@gmail.com",
+    "auth_provider": "google",
+    "display_name": "VIGNESH PANDIYA",
+    "google_subject": "112636486131174961563",
+    "password_hash": null,
+    "registered_at": "2026-10-09T04:03:19.226130+00:00",
+    "role": "developer",
+    "updated_at": "2026-10-09T04:23:49.476170+00:00",
+    "email": "vigneshpandiya21@gmail.com",
+    "last_login_at": "2026-10-09T04:23:49.476152+00:00",
+    "profile_image": "https://lh3.googleusercontent.com/a/ACg8ocJ_HSQDZ0CnYO-BtyLdyHRmu9--K2MJUiuebTZWdGpSWEsZF6bE=s96-c"
+  },
+  "rahulilayaraja21@gmail.com": {
+    "username": "rahulilayaraja21@gmail.com",
+    "auth_provider": "google",
+    "display_name": "Rahul",
+    "email": "rahulilayaraja21@gmail.com",
+    "google_subject": "101808079451734503259",
+    "last_login_at": "2026-10-09T04:24:18.004092+00:00",
+    "password_hash": null,
+    "profile_image": "https://lh3.googleusercontent.com/a/ACg8ocJW_1LGEoZJF_FDsn_JM1XY0HHEK3qeWYNLyMO-KrkHcXjB5A=s96-c",
+    "registered_at": "2026-10-09T04:24:18.004092+00:00",
+    "role": "developer",
+    "updated_at": "2026-10-09T04:24:18.004111+00:00"
   }
 }

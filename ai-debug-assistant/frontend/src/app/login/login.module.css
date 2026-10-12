@@ -284,6 +284,33 @@
   box-shadow: 0 14px 28px -4px rgba(22, 122, 91, 0.48), inset 0 1.5px 1.5px 0 #ffffff, inset 0 -2px 3px 0 rgba(0, 0, 0, 0.25);
 }
 
+/* Admin Portal Capsule Button */
+.adminPillBtn {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  border: 1.2px solid rgba(255, 255, 255, 0.85);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.38) 100%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px);
+  font-family: var(--font-heading);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sage-dark);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.06), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.adminPillBtn:hover {
+  background: #ffffff;
+  color: var(--sage-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -4px rgba(22, 122, 91, 0.18), inset 0 1.5px 1.5px 0 #ffffff;
+}
+
 /* ── Hero Presentation Section ── */
 .heroSection {
   flex: 1;
@@ -748,6 +775,62 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.googleButton {
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+}
+
+.googleUnavailableButton {
+  height: 44px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(77, 91, 111, 0.22);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.62);
+  color: #4b5563;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.googleMark {
+  width: 19px;
+  height: 19px;
+}
+
+.googleRoleHint {
+  margin: -8px 0 -2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: rgba(22, 122, 91, 0.16);
 }
 
 .field {
