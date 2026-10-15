@@ -1,7 +1,51 @@
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
-pyjwt>=2.8.0
+pydantic
+python-multipart
+httpx
+requests
+
+# Authentication and security
+PyJWT>=2.8.0
 argon2-cffi>=23.1.0
 google-auth>=2.29.0
+
+# Configuration
 python-dotenv>=1.0.1
+
+# Database
 pymongo
+
+# Data processing
+numpy
+pandas
+scipy
+
+# Machine learning
+scikit-learn
+joblib
+xgboost
+
+# Deep learning (keep only if used by the backend)
+tensorflow
+torch
+torchvision
+
+# AI / LLM
+openai
+langchain
+langchain-core
+langchain-community
+langchain-openai
+
+# Vector database / RAG
+chromadb
+faiss-cpu
+
+# Code analysis / debugging
+astroid
+bandit
+radon
+
+# Testing
+pytest
