@@ -1,12 +1,13 @@
 
 "use client";
 
+import { uploadLocalProject, scanDirectory } from "@/lib/api";
 import { useRef, useState } from "react";
 import styles from "./DirBrowser.module.css";
 
 interface Props {
   initialPath?: string;
-  onSelect: (path: string) => void;
+  onSelect: (files: File[], projectName: string) => void;
   onClose: () => void;
 }
 
