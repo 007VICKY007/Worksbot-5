@@ -1,7 +1,6 @@
 
 "use client";
 
-import { uploadLocalProject, scanDirectory } from "@/lib/api";
 import { useRef, useState } from "react";
 import styles from "./DirBrowser.module.css";
 
@@ -11,8 +10,43 @@ interface Props {
   onClose: () => void;
 }
 
+const IGNORED_DIRECTORIES = new Set([
+  ".git",
+  "node_modules",
+  ".next",
+  "dist",
+  "build",
+  ".venv",
+  "venv",
+  "__pycache__",
+  ".pytest_cache",
+  ".mypy_cache",
+]);
+
+function isEligibleFile(file: File): boolean {
+  const parts = file.webkitRelativePath.split("/");
+  const name = (parts.at(-1) ?? "").toLowerCase();
+
+  if (parts.some((part) => IGNORED_DIRECTORIES.has(part))) {
+    return false;
+  }
+
+  // Exclude common secret files from upload by default.
+  if (
+    name === ".env" ||
+    name.startsWith(".env.") ||
+    name.endsWith(".pem") ||
+    name.endsWith(".key") ||
+    name === "id_rsa" ||
+    name === "id_ed25519"
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 export default function DirBrowser({
-  initialPath = "",
   onSelect,
   onClose,
 }: Props) {
@@ -21,21 +55,8 @@ export default function DirBrowser({
   const [folderName, setFolderName] = useState("");
   const [error, setError] = useState("");
 
-  const ignoredDirectories = new Set([
-    ".git",
-    "node_modules",
-    ".next",
-    "dist",
-    "build",
-    ".venv",
-    "venv",
-    "__pycache__",
-    ".pytest_cache",
-    ".mypy_cache",
-  ]);
-
   function handleFolderChange(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const selected = Array.from(event.target.files ?? []);
     setError("");
@@ -49,63 +70,32 @@ export default function DirBrowser({
     const firstPath = selected[0].webkitRelativePath;
 
     if (!firstPath) {
-      setError("Your browser did not provide folder paths. Please try another browser.");
       setFiles([]);
       setFolderName("");
+      setError(
+        "Could not read the selected folder. Please try another browser.",
+      );
       return;
     }
 
     const rootName = firstPath.split("/")[0];
+    const eligibleFiles = selected.filter(isEligibleFile);
 
-    const filteredFiles = selected.filter((file) => {
-      const parts = file.webkitRelativePath.split("/");
-
-      if (
-        parts.some((part) => ignoredDirectories.has(part))
-      ) {
-        return false;
-      }
-
-      // Exclude common secret/config files by default.
-      const name = parts[parts.length - 1].toLowerCase();
-
-      if (
-        name === ".env" ||
-        name.startsWith(".env.") ||
-        name.endsWith(".pem") ||
-        name.endsWith(".key") ||
-        name === "id_rsa" ||
-        name === "id_ed25519"
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (filteredFiles.length === 0) {
-      setError("No eligible source files were found in the selected folder.");
-      setFiles([]);
-      setFolderName(rootName);
-      return;
-    }
-
-    setFiles(filteredFiles);
     setFolderName(rootName);
+    setFiles(eligibleFiles);
+
+    if (eligibleFiles.length === 0) {
+      setError("No eligible files were found in this folder.");
+    }
   }
 
   function handleSelect() {
-    if (files.length === 0 || !folderName) {
+    if (!files.length || !folderName) {
       setError("Please select a project folder first.");
       return;
     }
 
-    /*
-     * Return a browser-local project identifier, not a server path.
-     * The parent component must upload the selected File objects
-     * before starting a scan.
-     */
-    onSelect(`local-folder://${folderName}`);
+    onSelect(files, folderName);
     onClose();
   }
 
@@ -117,7 +107,7 @@ export default function DirBrowser({
       >
         <div className={styles.header}>
           <span className={styles.headerTitle}>
-            Select local project
+            Select Local Project
           </span>
 
           <button
@@ -158,11 +148,10 @@ export default function DirBrowser({
           <input
             ref={inputRef}
             type="file"
-            // @ts-expect-error Chromium and compatible browsers support webkitdirectory
-            webkitdirectory=""
             multiple
             hidden
             onChange={handleFolderChange}
+            {...({ webkitdirectory: "" } as Record<string, string>)}
           />
         </div>
 
@@ -173,8 +162,8 @@ export default function DirBrowser({
 
           {!folderName && !error && (
             <p className={styles.empty}>
-              Select a project folder to scan code on your computer.
-              Your files will not be uploaded until you start the scan.
+              Select a project folder from your computer.
+              Files will be available to the scanner after upload.
             </p>
           )}
 
@@ -184,33 +173,27 @@ export default function DirBrowser({
                 <strong>Selected folder:</strong> {folderName}
               </p>
 
-              <p>
-                {files.length} eligible files selected
-              </p>
+              <p>{files.length} eligible files selected</p>
 
               <p className={styles.loadText}>
-                Ignored directories and common secret files are excluded.
+                Common secret files and excluded directories are skipped.
               </p>
 
-              <div>
-                {files.slice(0, 12).map((file) => (
-                  <div
-                    key={file.webkitRelativePath}
-                    className={styles.listRow}
-                  >
-                    <FolderIcon />
-                    <span>
-                      {file.webkitRelativePath}
-                    </span>
-                  </div>
-                ))}
+              {files.slice(0, 12).map((file) => (
+                <div
+                  key={file.webkitRelativePath}
+                  className={styles.listRow}
+                >
+                  <FolderIcon />
+                  <span>{file.webkitRelativePath}</span>
+                </div>
+              ))}
 
-                {files.length > 12 && (
-                  <p className={styles.empty}>
-                    And {files.length - 12} more files…
-                  </p>
-                )}
-              </div>
+              {files.length > 12 && (
+                <p className={styles.empty}>
+                  And {files.length - 12} more files…
+                </p>
+              )}
             </>
           )}
         </div>
@@ -235,7 +218,7 @@ export default function DirBrowser({
               onClick={handleSelect}
               disabled={files.length === 0}
             >
-              Select this folder
+              Select Project
             </button>
           </div>
         </div>
