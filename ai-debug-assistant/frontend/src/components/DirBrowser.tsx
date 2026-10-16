@@ -1,6 +1,7 @@
+
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { browseDirectory, type BrowseResult } from "@/lib/api";
+
+import { useRef, useState } from "react";
 import styles from "./DirBrowser.module.css";
 
 interface Props {
@@ -9,155 +10,234 @@ interface Props {
   onClose: () => void;
 }
 
-export default function DirBrowser({ initialPath = "/", onSelect, onClose }: Props) {
-  const [result,  setResult]  = useState<BrowseResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState("");
-  const [typed,   setTyped]   = useState(initialPath);
+export default function DirBrowser({
+  initialPath = "",
+  onSelect,
+  onClose,
+}: Props) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [folderName, setFolderName] = useState("");
+  const [error, setError] = useState("");
 
-  const navigate = useCallback(async (path: string) => {
-    setLoading(true);
+  const ignoredDirectories = new Set([
+    ".git",
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+  ]);
+
+  function handleFolderChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const selected = Array.from(event.target.files ?? []);
     setError("");
-    try {
-      const data = await browseDirectory(path);
-      setResult(data);
-      setTyped(data.current);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not open directory.");
-    } finally {
-      setLoading(false);
+
+    if (selected.length === 0) {
+      setFiles([]);
+      setFolderName("");
+      return;
     }
-  }, []);
 
-  // Load initial path on mount
-  useEffect(() => {
-    navigate(initialPath);
-  }, [navigate, initialPath]);
+    const firstPath = selected[0].webkitRelativePath;
 
-  // Breadcrumb segments
-  const segments = result
-    ? result.current
-        .split("/")
-        .filter(Boolean)
-        .map((seg, i, arr) => ({
-          label: seg,
-          path:  "/" + arr.slice(0, i + 1).join("/"),
-        }))
-    : [];
+    if (!firstPath) {
+      setError("Your browser did not provide folder paths. Please try another browser.");
+      setFiles([]);
+      setFolderName("");
+      return;
+    }
 
-  function handleTypedSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    navigate(typed.trim() || "/");
+    const rootName = firstPath.split("/")[0];
+
+    const filteredFiles = selected.filter((file) => {
+      const parts = file.webkitRelativePath.split("/");
+
+      if (
+        parts.some((part) => ignoredDirectories.has(part))
+      ) {
+        return false;
+      }
+
+      // Exclude common secret/config files by default.
+      const name = parts[parts.length - 1].toLowerCase();
+
+      if (
+        name === ".env" ||
+        name.startsWith(".env.") ||
+        name.endsWith(".pem") ||
+        name.endsWith(".key") ||
+        name === "id_rsa" ||
+        name === "id_ed25519"
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (filteredFiles.length === 0) {
+      setError("No eligible source files were found in the selected folder.");
+      setFiles([]);
+      setFolderName(rootName);
+      return;
+    }
+
+    setFiles(filteredFiles);
+    setFolderName(rootName);
+  }
+
+  function handleSelect() {
+    if (files.length === 0 || !folderName) {
+      setError("Please select a project folder first.");
+      return;
+    }
+
+    /*
+     * Return a browser-local project identifier, not a server path.
+     * The parent component must upload the selected File objects
+     * before starting a scan.
+     */
+    onSelect(`local-folder://${folderName}`);
+    onClose();
   }
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-
-        {/* Header */}
+      <div
+        className={styles.modal}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className={styles.header}>
-          <span className={styles.headerTitle}>Browse directory</span>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          <span className={styles.headerTitle}>
+            Select local project
+          </span>
+
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Manual path input */}
-        <form className={styles.pathForm} onSubmit={handleTypedSubmit}>
-          <input
-            className={styles.pathInput}
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder="/path/to/directory"
-            spellCheck={false}
-          />
-          <button type="submit" className={styles.goBtn} disabled={loading}>
-            Go
-          </button>
-        </form>
-
-        {/* Breadcrumb */}
-        {result && (
-          <div className={styles.breadcrumb}>
-            <button className={styles.crumb} onClick={() => navigate("/")}>
-              Root
-            </button>
-            {segments.map((seg, i) => (
-              <span key={seg.path} className={styles.crumbRow}>
-                <span className={styles.crumbSep}>/</span>
-                {i === segments.length - 1 ? (
-                  <span className={styles.crumbCurrent}>{seg.label}</span>
-                ) : (
-                  <button className={styles.crumb} onClick={() => navigate(seg.path)}>
-                    {seg.label}
-                  </button>
-                )}
-              </span>
-            ))}
+        <div className={styles.pathForm}>
+          <div className={styles.pathInput}>
+            {folderName || "Choose a folder from your computer"}
           </div>
-        )}
 
-        {/* Directory listing */}
+          <button
+            type="button"
+            className={styles.goBtn}
+            onClick={() => inputRef.current?.click()}
+          >
+            Browse
+          </button>
+
+          <input
+            ref={inputRef}
+            type="file"
+            // @ts-expect-error Chromium and compatible browsers support webkitdirectory
+            webkitdirectory=""
+            multiple
+            hidden
+            onChange={handleFolderChange}
+          />
+        </div>
+
         <div className={styles.listing}>
-          {loading && (
-            <div className={styles.listRow}>
-              <div className={styles.spinner} />
-              <span className={styles.loadText}>Loading…</span>
-            </div>
+          {error && (
+            <div className={styles.errorMsg}>{error}</div>
           )}
 
-          {error && <div className={styles.errorMsg}>{error}</div>}
+          {!folderName && !error && (
+            <p className={styles.empty}>
+              Select a project folder to scan code on your computer.
+              Your files will not be uploaded until you start the scan.
+            </p>
+          )}
 
-          {!loading && result && (
+          {folderName && (
             <>
-              {/* Parent folder */}
-              {result.parent && (
-                <button
-                  className={`${styles.dirRow} ${styles.dirRowParent}`}
-                  onClick={() => navigate(result.parent!)}
-                >
-                  <FolderIcon />
-                  <span>..</span>
-                  <span className={styles.parentLabel}>Parent folder</span>
-                </button>
-              )}
+              <p>
+                <strong>Selected folder:</strong> {folderName}
+              </p>
 
-              {/* Subdirectories */}
-              {result.items.length === 0 && !result.parent && (
-                <p className={styles.empty}>No subdirectories found.</p>
-              )}
-              {result.items.map((item) => (
-                <button
-                  key={item.path}
-                  className={styles.dirRow}
-                  onClick={() => navigate(item.path)}
-                >
-                  <FolderIcon />
-                  <span className={styles.dirName}>{item.name}</span>
-                </button>
-              ))}
+              <p>
+                {files.length} eligible files selected
+              </p>
+
+              <p className={styles.loadText}>
+                Ignored directories and common secret files are excluded.
+              </p>
+
+              <div>
+                {files.slice(0, 12).map((file) => (
+                  <div
+                    key={file.webkitRelativePath}
+                    className={styles.listRow}
+                  >
+                    <FolderIcon />
+                    <span>
+                      {file.webkitRelativePath}
+                    </span>
+                  </div>
+                ))}
+
+                {files.length > 12 && (
+                  <p className={styles.empty}>
+                    And {files.length - 12} more files…
+                  </p>
+                )}
+              </div>
             </>
           )}
         </div>
 
-        {/* Footer actions */}
         <div className={styles.footer}>
-          <span className={styles.selectedPath}>{result?.current ?? ""}</span>
+          <span className={styles.selectedPath}>
+            {folderName || "No folder selected"}
+          </span>
+
           <div className={styles.footerBtns}>
-            <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
             <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
               className={styles.selectBtn}
-              onClick={() => { if (result) { onSelect(result.current); onClose(); } }}
-              disabled={!result}
+              onClick={handleSelect}
+              disabled={files.length === 0}
             >
               Select this folder
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -165,10 +245,18 @@ export default function DirBrowser({ initialPath = "/", onSelect, onClose }: Pro
 
 function FolderIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-      style={{ flexShrink: 0, color: "#9098a9" }}>
-      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ flexShrink: 0, color: "#9098a9" }}
+    >
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
     </svg>
   );
 }
