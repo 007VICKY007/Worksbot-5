@@ -165,13 +165,54 @@ export async function browseDirectory(path: string): Promise<BrowseResult> {
   return handleResponse(res);
 }
 
+
 // ── Scan ──────────────────────────────────────────────────────────────────────
+
+
+export async function uploadLocalProject(
+  files: File[],
+  projectName: string,
+): Promise<{ directory: string; message?: string }> {
+  if (files.length === 0) {
+    throw new Error("No project files selected.");
+  }
+
+  const token = getToken();
+
+  if (!token) {
+    expireSession();
+  }
+
+  const formData = new FormData();
+  formData.append("project_name", projectName);
+
+  for (const file of files) {
+    if (!file.webkitRelativePath) {
+      throw new Error(
+        `Missing relative path for ${file.name}. Please select the folder again.`,
+      );
+    }
+
+    formData.append("files", file, file.webkitRelativePath);
+  }
+
+  const response = await fetch(`${BASE}/api/projects/upload-local`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  return handleResponse(response);
+}
+
 
 export async function scanDirectory(directory: string): Promise<Report> {
   const res = await fetch(`${BASE}/api/scan`, {
-    method:  "POST",
+    method: "POST",
     headers: authHeaders(),
-    body:    JSON.stringify({ directory }),
+    body: JSON.stringify({ directory }),
   });
   return handleResponse(res);
 }
