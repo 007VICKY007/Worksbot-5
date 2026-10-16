@@ -107,9 +107,11 @@ async def database_error(request, exc):
 async def invalid_request(request, exc):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://worksbot-5.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
@@ -122,6 +124,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 bearer = HTTPBearer()
 
