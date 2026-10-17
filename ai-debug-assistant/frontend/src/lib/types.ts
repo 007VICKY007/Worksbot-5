@@ -109,6 +109,12 @@ export interface ApplyFixResult {
   resolved:         boolean;
 }
 
+export interface UploadedProjectResult {
+  project:         Project;
+  report:           Report;
+  deep_analyses?:  Record<string, AIAnalysis>;
+}
+
 export interface VerifyFixResult {
   status:           "VERIFIED" | "FAILED";
   is_valid:         boolean;
@@ -129,6 +135,7 @@ export interface Project {
   version:      string;
   description:  string;
   environments: string[];
+  source?:      string;
   stack?:       string[];
 }
 

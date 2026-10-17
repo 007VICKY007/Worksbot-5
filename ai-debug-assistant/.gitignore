@@ -24,6 +24,7 @@ env/
 
 # ── Node / Next.js ────────────────────────────────────────────────────────────
 node_modules/
+backend/uploaded_projects/
 .next/
 out/
 .npm/

@@ -4,6 +4,7 @@ import type {
   Issue,
   ApplyFixResult,
   VerifyFixResult,
+  UploadedProjectResult,
   RAGMemoryItem,
   RAGStats,
   Project,
@@ -61,6 +62,16 @@ function resolveApiBase(): string {
 }
 
 const BASE = resolveApiBase();
+
+export function apiMode(): "local" | "live" {
+  let api: URL;
+  try {
+    api = new URL((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/+$/, ""));
+  } catch {
+    return "live";
+  }
+  return LOOPBACK_HOSTS.has(api.hostname) ? "local" : "live";
+}
 
 export class SessionExpiredError extends Error {
   constructor() {
@@ -521,6 +532,30 @@ export async function importLocalProject(folderPath: string, name?: string): Pro
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ folder_path: folderPath, name }),
+  });
+  return handleResponse(res);
+}
+
+export async function uploadProject(
+  name: string | null,
+  deep: boolean,
+  files: File[],
+): Promise<UploadedProjectResult> {
+  const form = new FormData();
+  const manifest = JSON.stringify({
+    deep: deep ? "true" : "false",
+    files: files.map(file => file.webkitRelativePath || file.name),
+  });
+  form.append("manifest", manifest);
+  for (const file of files) {
+    form.append("files", file, file.name);
+  }
+  const token = getToken();
+  if (!token) expireSession();
+  const res = await fetch(`${BASE}/api/projects/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
   });
   return handleResponse(res);
 }

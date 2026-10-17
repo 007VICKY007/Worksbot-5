@@ -176,6 +176,15 @@ Organizes defects into 9 comprehensive software quality dimensions:
 - **Dashboard & Metrics:** Real-time summary with counts by status, severity, and visual status flow diagram.
 - **AI Test Generation:** Generate test cases automatically from any source file using GPT-4o.
 
+### 9. Browser Folder Picker — Local & Live Modes
+- **No local agent required:** Select an entire project folder directly in the browser using the standard `webkitdirectory` folder picker; the selected folder's structure and files are read client-side.
+- **Local mode:** With the backend running on the same machine (`NEXT_PUBLIC_API_URL=http://localhost:8001`), pick a folder and click **Upload & Scan** — files are uploaded to the local backend, stored under `UPLOAD_DIR`, and scanned immediately.
+- **Live mode (Vercel + Render):** With the frontend on Vercel and the backend on Render, the same **Upload & Scan** flow uploads the selected folder to the Render backend, which preserves the folder structure, registers a project, runs the full multi-language static scan, and returns the report. Optional **AI deep analysis** runs GPT-4o comprehension on every uploaded file.
+- **Mode indicator:** The workspace header shows a `LOCAL BACKEND` or `LIVE BACKEND` badge so users always know which backend serves the scan.
+- **Upload progress & errors:** Selected-file listing, upload/scan busy states, and inline error/notice messages keep the flow transparent.
+- **Security:** Relative paths from the browser are validated server-side (absolute paths and `..` traversal rejected); uploads require a valid JWT; project size and file-count limits are enforced.
+- **CORS configuration:** The backend accepts extra browser origins via the `CORS_ALLOWED_ORIGINS` environment variable (comma-separated), so the Vercel frontend can call the Render API.
+
 ---
 
 ## 📡 API Reference
@@ -214,6 +223,7 @@ Organizes defects into 9 comprehensive software quality dimensions:
 | `POST` | `/api/qa/simple/issues/{id}/assign` | Assigns issue to a developer | Yes (Bearer) |
 | `GET` | `/api/qa/simple/summary` | Retrieves workflow metrics dashboard | Yes (Bearer) |
 | `POST` | `/api/qa/simple/issues/{id}/retest` | Retests a fixed issue with a test run | Yes (Bearer) |
+| `POST` | `/api/projects/upload` | Multipart upload of browser-selected folder files (manifest + files); stores, registers, and scans the project | Yes (Bearer) |
 | `GET` | `/api/health` | Health check endpoint returning `{"status": "ok"}` | No |
 
 ---
@@ -327,6 +337,8 @@ pip install -r backend/requirements.txt pymongo openai python-dotenv
 # 2. Configure environment variables (in backend/.env):
 # OPENAI_API_KEY=sk-...
 # MONGO_URI=mongodb://localhost:27017/
+# CORS_ALLOWED_ORIGINS= (comma-separated origins for live mode, e.g. https://your-app.vercel.app)
+# UPLOAD_DIR=backend/uploaded_projects (where browser-uploaded folders are stored)
 
 # 3. Start the backend FastAPI server on port 8001:
 python3 -m uvicorn backend.server:app --port 8001 --reload
@@ -360,6 +372,37 @@ Frontend will be live at **`http://localhost:5173`**.
 3. Copy `backend/.env.example` to `backend/.env`, then set `GOOGLE_CLIENT_ID` to that client ID.
 4. Copy `frontend/.env.example` to `frontend/.env.local`, then set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to the **same** client ID.
 5. Restart both servers. The sign-in dialog will show **Continue with Google**. In the **Register** tab, choose Developer, QA Engineer, or Software Tester before continuing with Google; that approved role is stored for a first-time account. Existing accounts always keep their saved role. Administrator sign-in remains password-only.
+
+---
+
+## 🚀 Deployment — Vercel (Frontend) + Render (Backend)
+
+Local mode works out of the box with the Quick Start above. For **live mode**, deploy the frontend to Vercel and the backend to Render, then point them at each other:
+
+### 1. Deploy the backend to Render
+1. Create a new **Web Service** on [Render](https://render.com) from this repository (root directory).
+2. Build command: `pip install -r backend/requirements.txt`
+3. Start command: `python3 -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT`
+4. Add environment variables:
+   - `MONGO_URI` — a MongoDB Atlas connection string (Render's free instances are ephemeral; use Atlas for durable storage)
+   - `MONGO_DB_NAME` — e.g. `mindora_debug_assistant`
+   - `JWT_SECRET` — a long random string
+   - `OPENAI_API_KEY` — optional, enables AI deep analysis
+   - `CORS_ALLOWED_ORIGINS` — your Vercel URL, e.g. `https://your-app.vercel.app`
+   - `UPLOAD_DIR` — e.g. `/var/data/uploads` (optional; defaults to `backend/uploaded_projects`)
+5. Note the Render URL, e.g. `https://your-backend.onrender.com`.
+
+### 2. Deploy the frontend to Vercel
+1. Import this repository on [Vercel](https://vercel.com); set the **Root Directory** to `frontend/`.
+2. Add environment variables:
+   - `NEXT_PUBLIC_API_URL` — the Render backend URL from step 1 (e.g. `https://your-backend.onrender.com`)
+   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` — optional, for Google sign-in
+3. Deploy. The workspace header will show the **LIVE BACKEND** badge.
+
+### 3. Verify live mode
+1. Open the Vercel URL, sign in, and click **Choose project folder** to select a project on your computer.
+2. Click **Upload & Scan** — files upload to the Render backend (folder structure preserved) and the scan report renders in the workspace.
+3. Check **Run AI deep analysis after the static scan** to additionally run GPT-4o comprehension per file (requires `OPENAI_API_KEY`).
 
 ---
 

@@ -3,12 +3,13 @@
 
 import sys
 import os
+import json
 import shutil
 import uuid
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
-from fastapi import FastAPI, HTTPException, Depends, Security
+from fastapi import FastAPI, HTTPException, Depends, Security, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -88,6 +89,8 @@ from departments import (
 )
 from mongo import init_mongo
 
+import upload_manager
+
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Python Debug Assistant API")
 
@@ -96,6 +99,7 @@ app = FastAPI(title="Python Debug Assistant API")
 async def initialize_database_indexes() -> None:
     """Create identity constraints before accepting authentication requests."""
     init_mongo()
+    upload_manager.ensure_upload_root()
 
 
 @app.exception_handler(PyMongoError)
@@ -107,18 +111,22 @@ async def database_error(request, exc):
 async def invalid_request(request, exc):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://worksbot-5.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
         "http://localhost:8001",
         "http://127.0.0.1:8001",
-    ],
+    ]
+    return list(dict.fromkeys(defaults + configured))
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins(),
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
@@ -884,6 +892,58 @@ def project_import_local(req: ImportProjectRequest, current_user: str = Depends(
         return {"project": proj}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+def _upload_safe_relative(relative: str) -> str:
+    parts = [part for part in relative.replace("\\", "/").split("/") if part not in ("", ".")]
+    if not parts or relative.startswith("/") or ".." in parts:
+        raise HTTPException(status_code=400, detail="Invalid path inside the uploaded project.")
+    return "/".join(parts)
+
+
+def _upload_relative_paths(manifest: Optional[str]) -> List[str]:
+    if not manifest:
+        return []
+    try:
+        document = json.loads(manifest)
+    except ValueError:
+        return []
+    paths = document.get("files") if isinstance(document, dict) else None
+    if not isinstance(paths, list):
+        return []
+    return [str(path) for path in paths if isinstance(path, str)]
+
+
+@app.post("/api/projects/upload")
+async def upload_project(
+    name: Optional[str] = Form(None),
+    deep: Optional[str] = Form("false"),
+    manifest: Optional[str] = Form(None),
+    files: List[UploadFile] = File(...),
+    current_user: str = Depends(get_current_user),
+):
+    """Store project files selected in the browser, then scan the uploaded copy."""
+    deep_enabled = str(deep or "false").strip().lower() in ("true", "1", "on")
+    relative_paths = _upload_relative_paths(manifest)
+    stored: List[Tuple[str, bytes]] = []
+    for index, upload in enumerate(files):
+        if index < len(relative_paths):
+            relative = relative_paths[index]
+        else:
+            relative = upload.filename or f"file{index}"
+        stored.append(
+            (
+                _upload_safe_relative(relative),
+                await upload.read(),
+            )
+        )
+    result = upload_manager.store_project(
+        name=name,
+        deep=deep_enabled,
+        username=current_user,
+        files=stored,
+    )
+    return result
 
 
 @app.post("/api/projects/{project_id}/analyze")

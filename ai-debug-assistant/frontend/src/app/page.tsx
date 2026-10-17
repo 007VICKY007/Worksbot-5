@@ -36,6 +36,8 @@ import {
   fetchQAWorkflowSummary,
   generateAITestCasesForFile,
   retestQAIssue,
+  uploadProject,
+  apiMode,
 } from "@/lib/api";
 import { isLoggedIn, getUsername, clearSession, isAdmin, getUserRole, getRoleRoute } from "@/lib/auth";
 import { useWorkflow } from "@/lib/useWorkflow";
@@ -342,6 +344,7 @@ export default function Home() {
   const [report,             setReport]             = useState<Report | null>(null);
   const [showBrowser,        setShowBrowser]        = useState(false);
   const [aiIntellectualScan, setAiIntellectualScan] = useState(true);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   // Filters
   const [activeFile,     setActiveFile]     = useState("all");
@@ -385,6 +388,13 @@ export default function Home() {
   const [newTicketPriority, setNewTicketPriority] = useState("high");
   const [newTicketFile, setNewTicketFile] = useState("");
   const [submittingTicket, setSubmittingTicket] = useState(false);
+
+  // Browser folder upload state
+  const [selectedUploadFiles, setSelectedUploadFiles] = useState<File[]>([]);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadNotice, setUploadNotice] = useState("");
+  const [deepUpload, setDeepUpload] = useState(true);
 
   // Registered Users Directory State
   const [registeredUsers, setRegisteredUsers] = useState<UserRecord[]>([]);
@@ -806,8 +816,38 @@ export default function Home() {
     }
   }
 
+  function handleUploadSelection(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files ?? []);
+    setSelectedUploadFiles(picked);
+    setUploadError("");
+    setUploadNotice("");
+  }
+
+  async function handleUploadProject() {
+    if (selectedUploadFiles.length === 0) return;
+    setUploadBusy(true);
+    setUploadError("");
+    setUploadNotice("");
+    try {
+      const result = await uploadProject(null, deepUpload, selectedUploadFiles);
+      setReport(result.report);
+      setSelectedProjectId(result.project.id);
+      await loadPipelineAndTickets(result.project.id);
+      setScanDone(true);
+      setUploadNotice(
+        `Uploaded "${result.project.name}" with ${result.report.total_files} files scanned.`
+      );
+    } catch (e: unknown) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
   function reset() {
     setDir(""); setReport(null); setError(""); setScanDone(false);
+    setSelectedUploadFiles([]);
+    setUploadError(""); setUploadNotice("");
     setActiveFile("all"); setActiveLang("all"); setActiveCategory("all"); setActiveSev(["error","warning","info"]);
     setOpenFiles(new Set()); setOpenCategories(new Set()); setAiData({}); setAiErr({}); setAiOpen({});
     setCodeViewMode({}); setApplyingFix({}); setAppliedSuccess({});
@@ -1161,7 +1201,12 @@ export default function Home() {
             <h1 className={styles.scanTitle}>
               <AnimatedText text="Scan Any Codebase" delay={0.2} stagger={0.03} />
             </h1>
-            <p className={styles.scanSub}>Universal multi-language code debugging: Python, JS, TS, Java, C/C++, Go, Rust, SQL, Bash & more</p>
+            <p className={styles.scanSub}>
+              Universal multi-language code debugging: Python, JS, TS, Java, C/C++, Go, Rust, SQL, Bash & more
+              <span className={styles.modeBadge} data-mode={apiMode()}>
+                {apiMode() === "local" ? "LOCAL BACKEND" : "LIVE BACKEND"}
+              </span>
+            </p>
           </div>
           <form onSubmit={doScan}>
             <div className={styles.scanRow}>
@@ -1178,6 +1223,47 @@ export default function Home() {
                 <button type="button" className={styles.browseBtn} onClick={() => setShowBrowser(true)}>
                   Browse
                 </button>
+                <input
+                  ref={uploadInputRef}
+                  type="file"
+                  multiple
+                  hidden
+                  {...{ webkitdirectory: "" }}
+                  onChange={handleUploadSelection}
+                />
+                <button
+                  type="button"
+                  className={styles.browseBtn}
+                  onClick={() => uploadInputRef.current?.click()}
+                >
+                  Choose project folder
+                </button>
+              </div>
+              <div className={styles.uploadPanel}>
+                {selectedUploadFiles.length > 0 && (
+                  <>
+                    <div className={styles.uploadTitle}>
+                      {selectedUploadFiles.length} file{selectedUploadFiles.length === 1 ? "" : "s"} selected from this computer
+                    </div>
+                    <div className={styles.uploadList}>
+                      {selectedUploadFiles.map(file => (
+                        <div key={file.name + file.webkitRelativePath} className={styles.uploadRow}>
+                          <span className={styles.uploadPath}>{file.webkitRelativePath || file.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {uploadError && <div className={styles.uploadError}>{uploadError}</div>}
+                {uploadNotice && <div className={styles.uploadNotice}>{uploadNotice}</div>}
+                <label className={styles.uploadDeep}>
+                  <input
+                    type="checkbox"
+                    checked={deepUpload}
+                    onChange={e => setDeepUpload(e.target.checked)}
+                  />
+                  Run AI deep analysis after the static scan
+                </label>
               </div>
               <div className={styles.scanActions}>
                 <motion.button
@@ -1193,6 +1279,19 @@ export default function Home() {
                       ? <><ScanDoneIcon/> Scan again</>
                       : "Run scan"
                   }
+                </motion.button>
+                <motion.button
+                  type="button"
+                  className={styles.browseBtn}
+                  onClick={handleUploadProject}
+                  disabled={uploadBusy || selectedUploadFiles.length === 0}
+                  title="Upload files selected with the folder picker, then scan the uploaded copy"
+                >
+                  {uploadBusy ? (
+                    <><span className={styles.btnSpinner}/> Uploading…</>
+                  ) : (
+                    "Upload & Scan"
+                  )}
                 </motion.button>
                 <motion.button
                   type="button"
