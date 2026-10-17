@@ -547,6 +547,8 @@ export async function uploadProject(
     files: files.map(file => file.webkitRelativePath || file.name),
   });
   form.append("manifest", manifest);
+  if (name) form.append("name", name);
+  form.append("deep", deep ? "true" : "false");
   for (const file of files) {
     form.append("files", file, file.name);
   }

@@ -391,6 +391,7 @@ export default function Home() {
 
   // Browser folder upload state
   const [selectedUploadFiles, setSelectedUploadFiles] = useState<File[]>([]);
+  const [uploadName, setUploadName] = useState<string | null>(null);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadNotice, setUploadNotice] = useState("");
@@ -819,6 +820,7 @@ export default function Home() {
   function handleUploadSelection(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? []);
     setSelectedUploadFiles(picked);
+    setUploadName(picked[0]?.webkitRelativePath?.split("/")[0] ?? null);
     setUploadError("");
     setUploadNotice("");
   }
@@ -829,7 +831,7 @@ export default function Home() {
     setUploadError("");
     setUploadNotice("");
     try {
-      const result = await uploadProject(null, deepUpload, selectedUploadFiles);
+      const result = await uploadProject(uploadName, deepUpload, selectedUploadFiles);
       setReport(result.report);
       setSelectedProjectId(result.project.id);
       await loadPipelineAndTickets(result.project.id);
@@ -847,6 +849,7 @@ export default function Home() {
   function reset() {
     setDir(""); setReport(null); setError(""); setScanDone(false);
     setSelectedUploadFiles([]);
+    setUploadName(null);
     setUploadError(""); setUploadNotice("");
     setActiveFile("all"); setActiveLang("all"); setActiveCategory("all"); setActiveSev(["error","warning","info"]);
     setOpenFiles(new Set()); setOpenCategories(new Set()); setAiData({}); setAiErr({}); setAiOpen({});
@@ -1036,7 +1039,12 @@ export default function Home() {
       {showBrowser && (
         <DirBrowser
           initialPath={dir || "/"}
-          onSelect={p => setDir(p)}
+          onSelect={(files: File[], projectName: string) => {
+            setSelectedUploadFiles(files);
+            setUploadName(projectName);
+            setUploadError("");
+            setUploadNotice("");
+          }}
           onClose={() => setShowBrowser(false)}
         />
       )}

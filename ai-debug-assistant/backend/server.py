@@ -111,15 +111,22 @@ async def database_error(request, exc):
 async def invalid_request(request, exc):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+def _cors_origins() -> list[str]:
+    """Allowed browser origins: local dev defaults plus CORS_ALLOWED_ORIGINS from the environment."""
+    defaults = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:8001",
         "http://127.0.0.1:8001",
+    ]
+    configured = [
+        origin.strip()
+        for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+        if origin.strip()
     ]
     return list(dict.fromkeys(defaults + configured))
 
