@@ -18,34 +18,9 @@ pymongo
 
 # Data processing
 numpy
-pandas
-scipy
 
-# Machine learning
-scikit-learn
-joblib
-xgboost
-
-# Deep learning (keep only if used by the backend)
-tensorflow
-torch
-torchvision
-
-# AI / LLM
+# AI / LLM (imported lazily by ai_analyzer, ai_workflow, rag_pipeline)
 openai
-langchain
-langchain-core
-langchain-community
-langchain-openai
-
-# Vector database / RAG
-chromadb
-faiss-cpu
-
-# Code analysis / debugging
-astroid
-bandit
-radon
 
 # Testing
 pytest

@@ -97,9 +97,20 @@ app = FastAPI(title="Python Debug Assistant API")
 
 @app.on_event("startup")
 async def initialize_database_indexes() -> None:
-    """Create identity constraints before accepting authentication requests."""
-    init_mongo()
-    upload_manager.ensure_upload_root()
+    """Create identity constraints before accepting authentication requests.
+
+    Never raises: an unreachable database or disk hiccup must not abort the
+    lifespan startup, because Uvicorn only binds the listening socket after
+    startup completes (otherwise Render reports 'No open ports detected').
+    """
+    try:
+        init_mongo()
+    except Exception as exc:  # noqa: BLE001 — startup must not crash the server
+        print(f"[startup] MongoDB init skipped: {exc}", flush=True)
+    try:
+        upload_manager.ensure_upload_root()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[startup] upload root not created: {exc}", flush=True)
 
 
 @app.exception_handler(PyMongoError)
@@ -2051,3 +2062,13 @@ def workflow_notification_read(notification_id: str, user: tuple = Depends(get_c
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "server:app",
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "8001")),
+    )
