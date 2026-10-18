@@ -28,7 +28,10 @@ UPLOAD_ROOT = Path(
     os.getenv("UPLOAD_DIR", str(BACKEND_DIR / "uploaded_projects"))
 ).expanduser().resolve()
 MAX_PROJECT_FILES = 1000
-MAX_PROJECT_BYTES = 200 * 1024 * 1024
+# Keep this under Cloudflare's ~100 MB request-body cap in front of Render so
+# oversized uploads are rejected by our app (a clear 400) rather than by the
+# edge proxy (an opaque 403/413 that surfaces as "Failed to fetch").
+MAX_PROJECT_BYTES = 90 * 1024 * 1024
 
 
 def ensure_upload_root() -> Path:

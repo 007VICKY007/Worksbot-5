@@ -102,6 +102,16 @@ async function handleResponse<T>(res: Response, requiresAuth = true): Promise<T>
   if (requiresAuth && res.status === 401) expireSession();
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    // Edge proxies (Cloudflare in front of Render) reject oversized bodies with
+    // 403/413 and a non-JSON body, so surface a specific message for those.
+    if (res.status === 413) {
+      throw new Error("The upload is too large for the server to accept. Try a smaller project.");
+    }
+    if (res.status === 403 && typeof body.detail !== "string") {
+      throw new Error(
+        "The server blocked this request (403). It was likely rejected as too large before reaching the app — try a smaller project.",
+      );
+    }
     throw new Error(body.detail ?? `Server error: ${res.status}`);
   }
   return res.json() as Promise<T>;
@@ -536,11 +546,34 @@ export async function importLocalProject(folderPath: string, name?: string): Pro
   return handleResponse(res);
 }
 
+/**
+ * Client-side upload ceiling, kept below the backend's 200 MB limit because
+ * Render's edge proxy (Cloudflare) rejects request bodies over ~100 MB with a
+ * 403/413 before our app ever sees them. Rejecting early gives the user a
+ * clear message instead of a generic "Failed to fetch".
+ */
+export const MAX_UPLOAD_BYTES = 90 * 1024 * 1024;
+export const MAX_UPLOAD_FILES = 1000;
+
+function totalUploadBytes(files: File[]): number {
+  return files.reduce((sum, file) => sum + file.size, 0);
+}
+
 export async function uploadProject(
   name: string | null,
   deep: boolean,
   files: File[],
 ): Promise<UploadedProjectResult> {
+  if (files.length > MAX_UPLOAD_FILES) {
+    throw new Error(`Too many files selected (${files.length}). Limit is ${MAX_UPLOAD_FILES}.`);
+  }
+  const bytes = totalUploadBytes(files);
+  if (bytes > MAX_UPLOAD_BYTES) {
+    throw new Error(
+      `Selected project is ${(bytes / (1024 * 1024)).toFixed(0)} MB. ` +
+      `The maximum upload size is ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB — try excluding large build or binary files.`,
+    );
+  }
   const form = new FormData();
   const manifest = JSON.stringify({
     deep: deep ? "true" : "false",
