@@ -88,6 +88,7 @@ from departments import (
     log_department_action,
 )
 from mongo import init_mongo
+from mongo import ping_database
 
 import upload_manager
 
@@ -133,6 +134,9 @@ def _cors_origins() -> list[str]:
         "http://127.0.0.1:5173",
         "http://localhost:8001",
         "http://127.0.0.1:8001",
+        # Deployed Vercel frontend. Starlette returns 400 "Disallowed CORS origin"
+        # for any origin missing here, which broke register/login from the browser.
+        "https://worksbot-5.vercel.app",
     ]
     configured = [
         origin.strip()
@@ -145,10 +149,11 @@ def _cors_origins() -> list[str]:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["Content-Disposition"],
+    max_age=600,
 )
 
 
@@ -2062,6 +2067,19 @@ def workflow_notification_read(notification_id: str, user: tuple = Depends(get_c
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health")
+def health_root():
+    """Liveness + readiness check. Performs a real MongoDB ping."""
+    db_ok = ping_database()
+    return JSONResponse(
+        status_code=200 if db_ok else 503,
+        content={
+            "status": "ok" if db_ok else "degraded",
+            "database": "up" if db_ok else "down",
+        },
+    )
 
 
 if __name__ == "__main__":

@@ -56,6 +56,23 @@ def get_mongo_client() -> Optional[MongoClient]:
         return None
 
 
+def ping_database() -> bool:
+    """Return True only after a real round-trip ping to the database.
+
+    Reuses the cached client when available; otherwise attempts a fresh
+    connection. Never raises.
+    """
+    try:
+        client = get_mongo_client()
+        if client is None:
+            return False
+        client.admin.command("ping")
+        return True
+    except Exception as exc:  # noqa: BLE001 — health checks must not raise
+        logger.error("MongoDB ping failed: %s", type(exc).__name__)
+        return False
+
+
 def get_mongo_db() -> Optional[Database]:
     """Return the configured application database."""
     global _db
